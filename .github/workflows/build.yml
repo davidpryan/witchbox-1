@@ -4,6 +4,8 @@ name: build
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   firmware:
     runs-on: ubuntu-24.04
@@ -39,7 +41,9 @@ jobs:
       - name: The browser emulator
         run: ./build.sh --web
       - name: The site (the web installer, with m-bootloader on offer; the manual; the emulator; the backup page)
-        run: python3 base/tools/make_site.py app app/build/witchbox1-0.4.fwsc 0.4 app/build/site
+        run: |
+          python3 base/tools/make_site.py app app/build/witchbox1-0.4.fwsc 0.4 app/build/site
+          python3 tools/site_skin.py app/build/site 0.4 witchbox1-0.4.fwsc
       - uses: actions/upload-artifact@v4
         with:
           name: witchbox1-firmware
@@ -47,3 +51,24 @@ jobs:
             app/build/witchbox1-0.4.fwsc
             app/build/site/
             app/build/witchbox1.dis
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: app/build/site
+  pages:
+    # the site at its permanent address (GitHub Pages, from the build above): the installer, the manual, the emulator
+    if: github.ref == 'refs/heads/main'
+    needs: firmware
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - id: deploy
+        uses: actions/deploy-pages@v4

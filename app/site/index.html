@@ -1,0 +1,257 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only — witchbox1's front page (app/site/index.html; tools/site_skin.py fills in the version) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>witchbox1</title>
+<meta name="description" content="The eighty Witchbox toys of Playbox, as firmware for the M-VAVE FM-1.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap">
+<style>
+:root { --bg: #14141a; --panel: #282832; --line: #424250; --dim: #8c8896; --text: #f8f2e2; --acc: #ff54a4;
+        --purple: #8c5ce6; --blue: #4286f4; --cyan: #3cc8dc; --green: #54c46e; --yellow: #f0c83c; --orange: #f48c32; --red: #e84646; }
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text); font: 500 18px/1.5 "Barlow Semi Condensed", "Barlow", "Arial Narrow", sans-serif; }
+a { color: inherit; text-decoration-color: var(--dim); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--acc); }
+:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+header.top { display: flex; align-items: baseline; gap: 28px; padding: 22px 0 0; flex-wrap: wrap; }
+header.top .name { font-weight: 700; font-size: 22px; letter-spacing: .01em; text-decoration: none; margin-right: auto; }
+header.top nav a { color: var(--dim); text-decoration: none; margin-left: 22px; }
+header.top nav a:hover { color: var(--text); }
+.hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; padding: 72px 0 56px; }
+.hero h1 { font-size: clamp(64px, 11vw, 128px); line-height: .9; font-weight: 700; margin: 0 0 22px; letter-spacing: -.02em; }
+.hero h1 small { display: block; font-size: .22em; font-weight: 500; color: var(--dim); letter-spacing: 0; margin-top: 10px; }
+.hero p { font-size: 21px; max-width: 32em; margin: 0 0 30px; color: #e4ddcc; }
+.cta { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.btn { display: inline-block; font-weight: 700; font-size: 18px; text-decoration: none; padding: 12px 24px; border-radius: 4px; }
+.btn.go { background: var(--acc); color: #1a0a12; }
+.btn.go:hover { background: #ff72b4; }
+.btn.quiet { color: var(--text); border: 1px solid var(--line); }
+.btn.quiet:hover { border-color: var(--dim); }
+.screens { position: relative; height: 520px; }
+.screens img { position: absolute; width: 480px; height: 480px; image-rendering: pixelated; border: 6px solid #0a0a0d; border-radius: 10px;
+               box-shadow: 0 30px 60px rgba(0,0,0,.6); }
+.screens img.a { left: 0; top: 0; width: 400px; height: 400px; }
+.screens img.b { right: 0; bottom: 0; width: 300px; height: 300px; }
+section { padding: 40px 0; border-top: 1px solid var(--line); }
+section h2 { font-size: 40px; line-height: 1.05; font-weight: 700; margin: 0 0 10px; letter-spacing: -.01em; }
+section > .wrap > p.lede, .lede { color: var(--dim); font-size: 20px; max-width: 36em; margin: 0 0 28px; }
+.shelves { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.shelf { margin: 0; background: var(--panel); border-radius: 6px; padding: 14px 14px 10px; }
+.shelf ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px 6px; font-size: 13.5px; font-weight: 600; }
+.shelf li { display: flex; gap: 6px; white-space: nowrap; overflow: hidden; }
+.shelf .n { color: var(--dim); min-width: 1.4em; text-align: right; font-weight: 500; }
+.shelf figcaption { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--dim); font-size: 15px; }
+.shelf figcaption b { color: var(--text); margin-right: 8px; }
+.band { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+.band img { width: 100%; max-width: 360px; image-rendering: pixelated; border: 4px solid #0a0a0d; border-radius: 8px; }
+.band p { max-width: 34em; }
+.pads { columns: 2; column-gap: 40px; max-width: 60em; }
+.pads p { break-inside: avoid; margin: 0 0 14px; }
+.pads b { color: var(--cyan); font-weight: 600; }
+ol.steps { list-style: none; counter-reset: s; margin: 0; padding: 0; max-width: 40em; }
+ol.steps li { counter-increment: s; position: relative; padding: 0 0 22px 64px; }
+ol.steps li::before { content: counter(s); position: absolute; left: 0; top: -4px; font-size: 40px; font-weight: 700; color: var(--acc); line-height: 1; }
+ol.steps b { font-weight: 700; }
+.warn { border-left: 4px solid var(--red); padding: 4px 0 4px 16px; color: #e4ddcc; max-width: 40em; }
+footer { border-top: 1px solid var(--line); padding: 32px 0 60px; color: var(--dim); font-size: 15px; }
+footer p { max-width: 60em; margin: 0 0 8px; }
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; padding-top: 40px; }
+  .screens { height: 360px; } .screens img.a { width: 280px; height: 280px; } .screens img.b { width: 200px; height: 200px; }
+  .shelves, .band { grid-template-columns: 1fr; } .pads { columns: 1; }
+}
+@media (prefers-reduced-motion: no-preference) { .btn { transition: background .15s, border-color .15s; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <a class="name" href="./">witchbox1</a>
+  <nav><a href="install/">Install</a><a href="emu/">Try it in the browser</a><a href="manual/">Manual</a><a href="backup/">Backup</a><a href="https://github.com/davidpryan/witchbox-1">Source</a></nav>
+</header>
+
+<div class="hero">
+  <div>
+    <h1>witchbox1<small>Witch house toys for the M-VAVE FM-1</small></h1>
+    <p>Eighty small generative sequencers, each with four knobs and a four-digit seed, playing eight at a time on one clock and one run of chords. Limping garage beats, sub bass, detuned saws, glass arpeggios, screwed voices, record crackle; shift registers, Markov chains and cellular automata for drums; and conductors that cut the band, fog it, dub it out or move its key.</p>
+    <div class="cta">
+      <a class="btn go" href="install/">Install on your FM-1</a>
+      <a class="btn quiet" href="emu/">Try it in the browser</a>
+    </div>
+  </div>
+  <div class="screens" aria-hidden="true">
+    <img class="a" src="manual/img/screen-band.png" alt="">
+    <img class="b" src="manual/img/screen-toy.png" alt="">
+  </div>
+</div>
+</div>
+
+<section>
+<div class="wrap">
+  <h2>Eighty toys, four shelves</h2>
+  <p class="lede">A toy is a tune-maker with a method: a limping beat, a walking bass, a chord that ducks on every kick, a bell that answers itself. The same seed and knobs play the same notes every time, here and on the Pico that Playbox runs on.</p>
+  <div class="shelves">
+<figure class="shelf">
+<ol>
+<li><span class="n">1</span><span class="t" style="color:#4286f4" title="drums">TWO-STEP</span></li>
+<li><span class="n">2</span><span class="t" style="color:#8c5ce6" title="drums">HAT ROLL</span></li>
+<li><span class="n">3</span><span class="t" style="color:#8c5ce6" title="drums">SLOW STOMP</span></li>
+<li><span class="n">4</span><span class="t" style="color:#f48c32" title="drums">POCKET CHANGE</span></li>
+<li><span class="n">5</span><span class="t" style="color:#f06eb4" title="drums">LIMP</span></li>
+<li><span class="n">6</span><span class="t" style="color:#4286f4" title="bass">UNDERTOW</span></li>
+<li><span class="n">7</span><span class="t" style="color:#e84646" title="bass">808 SLIDE</span></li>
+<li><span class="n">8</span><span class="t" style="color:#54c46e" title="bass">OCTAVE PUMP</span></li>
+<li><span class="n">9</span><span class="t" style="color:#4286f4" title="bass">REESE</span></li>
+<li><span class="n">10</span><span class="t" style="color:#8c5ce6" title="bass">DRONE</span></li>
+<li><span class="n">11</span><span class="t" style="color:#f06eb4" title="chords">PUMP PAD</span></li>
+<li><span class="n">12</span><span class="t" style="color:#8c5ce6" title="chords">COVEN SAWS</span></li>
+<li><span class="n">13</span><span class="t" style="color:#3cc8dc" title="chords">STUTTER GATE</span></li>
+<li><span class="n">14</span><span class="t" style="color:#4286f4" title="chords">WET PIANO</span></li>
+<li><span class="n">15</span><span class="t" style="color:#8c5ce6" title="chords">CATHEDRAL</span></li>
+<li><span class="n">16</span><span class="t" style="color:#3cc8dc" title="lead">GLASS ARP</span></li>
+<li><span class="n">17</span><span class="t" style="color:#54c46e" title="lead">BITCRUSH ARP</span></li>
+<li><span class="n">18</span><span class="t" style="color:#e84646" title="lead">HOOK MACHINE</span></li>
+<li><span class="n">19</span><span class="t" style="color:#8c5ce6" title="lead">LOST MELODY</span></li>
+<li><span class="n">20</span><span class="t" style="color:#e84646" title="lead">SCREAMER</span></li>
+</ol>
+<figcaption><b>Witch I</b> Pages three and four of Playbox's shelf, note for note.</figcaption>
+</figure>
+<figure class="shelf">
+<ol>
+<li><span class="n">1</span><span class="t" style="color:#e84646" title="drums">FOUR FLOOR</span></li>
+<li><span class="n">2</span><span class="t" style="color:#f48c32" title="drums">SNARE RUSH</span></li>
+<li><span class="n">3</span><span class="t" style="color:#3cc8dc" title="drums">BROKEN CLOCK</span></li>
+<li><span class="n">4</span><span class="t" style="color:#8c5ce6" title="drums">FOG TOMS</span></li>
+<li><span class="n">5</span><span class="t" style="color:#f48c32" title="texture">RISER</span></li>
+<li><span class="n">6</span><span class="t" style="color:#e84646" title="chords">RAVE STAB</span></li>
+<li><span class="n">7</span><span class="t" style="color:#f06eb4" title="chords">SWELL</span></li>
+<li><span class="n">8</span><span class="t" style="color:#3cc8dc" title="chords">TAPE LOOP</span></li>
+<li><span class="n">9</span><span class="t" style="color:#8c5ce6" title="texture">CRACKLE</span></li>
+<li><span class="n">10</span><span class="t" style="color:#4286f4" title="texture">NIGHT BUS</span></li>
+<li><span class="n">11</span><span class="t" style="color:#f06eb4" title="lead">MUSIC BOX</span></li>
+<li><span class="n">12</span><span class="t" style="color:#8c5ce6" title="lead">SIREN</span></li>
+<li><span class="n">13</span><span class="t" style="color:#4286f4" title="lead">SHADOW</span></li>
+<li><span class="n">14</span><span class="t" style="color:#f06eb4" title="voice">GHOST VOICE</span></li>
+<li><span class="n">15</span><span class="t" style="color:#f48c32" title="voice">STUTTER CHOP</span></li>
+<li><span class="n">16</span><span class="t" style="color:#8c5ce6" title="voice">SCREWED VOICE</span></li>
+<li><span class="n">17</span><span class="t" style="color:#3cc8dc" title="voice">BREATH STACK</span></li>
+<li><span class="n">18</span><span class="t" style="color:#8c5ce6" title="conductor">BLACKOUT</span></li>
+<li><span class="n">19</span><span class="t" style="color:#8c5ce6" title="conductor">SCREW</span></li>
+<li><span class="n">20</span><span class="t" style="color:#8c5ce6" title="conductor">ARC</span></li>
+</ol>
+<figcaption><b>Witch II</b> </figcaption>
+</figure>
+<figure class="shelf">
+<ol>
+<li><span class="n">1</span><span class="t" style="color:#e84646" title="drums">HEARTBEAT</span></li>
+<li><span class="n">2</span><span class="t" style="color:#f48c32" title="drums">CHOPPED BREAK</span></li>
+<li><span class="n">3</span><span class="t" style="color:#96969e" title="drums">SCRAPYARD</span></li>
+<li><span class="n">4</span><span class="t" style="color:#f0c83c" title="drums">RATTLEBONES</span></li>
+<li><span class="n">5</span><span class="t" style="color:#8c5ce6" title="drums">PHONK BELL</span></li>
+<li><span class="n">6</span><span class="t" style="color:#f48c32" title="bass">BODY BASS</span></li>
+<li><span class="n">7</span><span class="t" style="color:#3cc8dc" title="bass">COLD WAVE</span></li>
+<li><span class="n">8</span><span class="t" style="color:#54c46e" title="bass">ACID DRIP</span></li>
+<li><span class="n">9</span><span class="t" style="color:#4286f4" title="chords">AFTER HOURS</span></li>
+<li><span class="n">10</span><span class="t" style="color:#8c5ce6" title="chords">VESPERS</span></li>
+<li><span class="n">11</span><span class="t" style="color:#96969e" title="chords">GRAVEYARD GUITAR</span></li>
+<li><span class="n">12</span><span class="t" style="color:#3cc8dc" title="chords">SHIVER</span></li>
+<li><span class="n">13</span><span class="t" style="color:#f0c83c" title="lead">HEX BELL</span></li>
+<li><span class="n">14</span><span class="t" style="color:#54c46e" title="lead">CURSED CARTRIDGE</span></li>
+<li><span class="n">15</span><span class="t" style="color:#f06eb4" title="lead">HELIUM</span></li>
+<li><span class="n">16</span><span class="t" style="color:#4286f4" title="texture">STORM</span></li>
+<li><span class="n">17</span><span class="t" style="color:#96969e" title="texture">MURDER</span></li>
+<li><span class="n">18</span><span class="t" style="color:#8c5ce6" title="texture">TOLL BELL</span></li>
+<li><span class="n">19</span><span class="t" style="color:#96969e" title="conductor">FOG</span></li>
+<li><span class="n">20</span><span class="t" style="color:#54c46e" title="conductor">DUB OUT</span></li>
+</ol>
+<figcaption><b>Witch III</b> The twenty that Playbox v0.12 added, made again from their descriptions.</figcaption>
+</figure>
+<figure class="shelf">
+<ol>
+<li><span class="n">1</span><span class="t" style="color:#3cc8dc" title="drums">TURING DRUMS</span></li>
+<li><span class="n">2</span><span class="t" style="color:#f48c32" title="drums">RATCHET</span></li>
+<li><span class="n">3</span><span class="t" style="color:#8c5ce6" title="drums">MARKOV KIT</span></li>
+<li><span class="n">4</span><span class="t" style="color:#54c46e" title="drums">AUTOMATON</span></li>
+<li><span class="n">5</span><span class="t" style="color:#4286f4" title="bass">SLEEPWALK</span></li>
+<li><span class="n">6</span><span class="t" style="color:#3cc8dc" title="bass">PULSAR</span></li>
+<li><span class="n">7</span><span class="t" style="color:#e84646" title="bass">HYSTERIA</span></li>
+<li><span class="n">8</span><span class="t" style="color:#8c5ce6" title="chords">SEANCE</span></li>
+<li><span class="n">9</span><span class="t" style="color:#54c46e" title="chords">LICHEN</span></li>
+<li><span class="n">10</span><span class="t" style="color:#f0c83c" title="chords">ROUND</span></li>
+<li><span class="n">11</span><span class="t" style="color:#3cc8dc" title="lead">FRACTAL</span></li>
+<li><span class="n">12</span><span class="t" style="color:#8c5ce6" title="lead">ORACLE</span></li>
+<li><span class="n">13</span><span class="t" style="color:#f48c32" title="lead">LOOM</span></li>
+<li><span class="n">14</span><span class="t" style="color:#f0c83c" title="lead">GOLDEN</span></li>
+<li><span class="n">15</span><span class="t" style="color:#96969e" title="lead">HAUNTING</span></li>
+<li><span class="n">16</span><span class="t" style="color:#3cc8dc" title="texture">CHIMES</span></li>
+<li><span class="n">17</span><span class="t" style="color:#f06eb4" title="texture">WHISPER</span></li>
+<li><span class="n">18</span><span class="t" style="color:#96969e" title="texture">STATIC</span></li>
+<li><span class="n">19</span><span class="t" style="color:#e84646" title="conductor">CULLING</span></li>
+<li><span class="n">20</span><span class="t" style="color:#4286f4" title="conductor">MOON</span></li>
+</ol>
+<figcaption><b>Witch IV</b> Twenty of witchbox1's own, a classic generative method each.</figcaption>
+</figure>
+  </div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+  <h2>A band of eight</h2>
+  <div class="band">
+    <div>
+      <p class="lede">Eight seats, each a toy, on one clock and one run of chords. Each seat has its volume, a mute and a solo; the conductors sit in a seat like any toy and work on the others.</p>
+      <p>A Tape gives every seat a lane of bars, on or off, 4 to 64 bars long. A Clock gives every seat a ring of sixteen dots spread as evenly as they can be, so eight seats on different counts make a slowly turning song. REC held fills a band, or an arrangement, at random; the band page shows which seat the chords, the lead and the kick are coming from.</p>
+      <p>Sixteen slots keep toys, four keep whole bands with their arrangement, and the band is saved as you left it.</p>
+    </div>
+    <div>
+      <img src="manual/img/screen-tape.png" alt="The Tape page: a lane per seat, a cell per bar">
+      <img src="manual/img/screen-clock.png" alt="The Clock page: a ring of sixteen dots per seat" style="margin-top:16px">
+    </div>
+  </div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+  <h2>The keys are pads</h2>
+  <p class="lede">The four knobs are always the toy's four. Everything else lives on the buttons and the twenty-seven keys.</p>
+  <div class="pads">
+    <p><b>White keys 1 to 7</b> held, steer the chord root; every toy follows, the chord that is coming included.</p>
+    <p><b>White keys 9 to 16</b> mute a seat; with ENV held, solo it. <b>Key 8</b> brings everyone back in.</p>
+    <p><b>Black keys</b> are dice and undo, half and double time, freeze, brake, filter, crush, drive, an echo throw, and calm.</p>
+    <p><b>HOME</b> opens the shelf on the keys, twenty toys a page. <b>REC</b> rolls a new seed; held, a random band.</p>
+    <p><b>SEQ</b> switches the arrangement: band, tape, clock. <b>SEL</b> steps through the dark scales.</p>
+    <p>Hold <b>GLO</b> for scale, chords, tempo and rate; <b>EDIT</b> for the seed's digits; <b>FX</b> for drive, crush, echo and feedback; <b>ENV</b> for the mixer; <b>LFO</b> for a slow drift on each knob.</p>
+  </div>
+</div>
+</section>
+
+<section id="install">
+<div class="wrap">
+  <h2>Install, and the way back</h2>
+  <p class="lede">witchbox1 replaces the FM-1's firmware; nothing of M-VAVE's stays. Installing is at your own risk. Version {{VERSION}}.</p>
+  <ol class="steps">
+    <li><b>Back up first.</b> If the FM-1 already runs witchbox1, the <a href="backup/">backup page</a> saves the band and every saved toy to a file.</li>
+    <li><b>Install from Chrome or Edge</b> with the FM-1 on a USB data cable, from the <a href="install/">install page</a>. Take the m-bootloader option: it replaces M-VAVE's bootloader with an open one that keeps a recovery menu (PLAY held while switching on) and an update mode (REC held), even when a firmware will not start. Do not unplug until it says Done; the FM-1 restarts by itself, twice with m-bootloader.</li>
+    <li><b>If it will not start</b>, witchbox1 comes up in a safe mode after two failed starts and says where it failed; USB works there, so the install page can reinstall or put M-VAVE's firmware back. With m-bootloader, PLAY held at power-on reaches the recovery menu whatever happened.</li>
+    <li><b>Back to M-VAVE's firmware</b> at any time: the install page's "Back to the stock firmware" writes M-VAVE's V15 (download it from <a href="https://www.m-vave.com/download">m-vave.com</a> first), and M-VAVE's own updater works too.</li>
+  </ol>
+  <p class="warn">An earlier witchbox1 carried its own copy of the platform layer, and an interrupted update under it left an FM-1 needing a hardware recovery. This one is built on fm1-base, the maintained layer other FM-1 firmwares update through, with m-bootloader on offer so that a failed start is not the end.</p>
+  <p>For the command line: <a href="firmware/{{PKG}}">download {{PKG}}</a> and run <code>python3 base/tools/fm1_install.py {{PKG}}</code> from the source tree.</p>
+</div>
+</section>
+
+<footer>
+<div class="wrap">
+  <p>witchbox1 is the Witchbox shelf of <a href="https://github.com/davidpryan/witchbox">Playbox</a>, ported to C for the FM-1. GPL-3.0-only; <a href="https://github.com/davidpryan/witchbox-1">source on GitHub</a>. Built on <a href="https://github.com/charlesvestal/fm1-base">fm1-base</a> and felucca-bsp, from Felucca by Leo Kuroshita (Hügelton Instruments); the frame is HAUNT-1's and AMB-1's (Charles Vestal). The recordings are CC0. m-bootloader is Julius Vitkauskas's, MIT.</p>
+  <p>M-VAVE and FM-1 are trademarks of their owners. witchbox1 is not affiliated with M-VAVE.</p>
+</div>
+</footer>
+</body>
+</html>
