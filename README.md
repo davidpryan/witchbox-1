@@ -59,10 +59,20 @@ takes you back.
   and Clock arrangements (`tests/scenarios/`), and all of it passes. The audio load of a busy band of four counts at about
   45 % of an FM-1 by host instructions (`tools/cpu.sh`), near what HAUNT-1 measured as 28 % on a
   device.
-- **Not verified**: witchbox1 has not been compiled with JieLi's compiler or run on an FM-1. The
-  platform underneath (audio, screen, buttons, USB, storage, the update loader, safe mode) is
-  HAUNT-1's, which has run on an FM-1; the app above it has not. The first device build may need a
-  small fix.
+- **The device build.** The GitHub workflow builds witchbox1 with JieLi's own compiler (clang 4.0.1
+  for pi32v2) and the build's checks pass: no soft-double routine linked, nothing refers to the chip's
+  ROM, no register touched outside `firmware/hal/`, and the image is 460 KB of the 582 KB slot, RAM
+  27 KB of 96 KB, the pool 108 KB of 336 KB. Felucca's update-path tests run against the package.
+- **The install path is HAUNT-1's, unchanged.** The update loader, the package tool, the flash
+  storage, the USB stack, the boot sequence (watchdog first, the boot-loop guard that lands in safe
+  mode after two failed starts, the stack guards) and the web installer differ from HAUNT-1's only
+  in the product's name and identity (`FM-1_5...`); HAUNT-1 has run on an FM-1 through that path.
+  The deepest stack frame is under 500 bytes against stacks of 24 KB and 8 KB, with no
+  variable-length frames anywhere; the project record (1.3 KB) fits its 3.8 KB flash object, and
+  the build refuses one that does not. A busy band of eight counts at about 49 % of the audio
+  budget by host instructions (`tools/cpu.sh`), and an overrun only drops a block, it does not stop.
+- **Not verified**: witchbox1 has not run on an FM-1. The sound through the FM-1's converter and
+  speaker, the screen on its panel, the real audio load and the lights are unseen.
 
 ## Try it in the browser
 

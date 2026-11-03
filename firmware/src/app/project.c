@@ -3,6 +3,8 @@
  * four saved bands. A project of another format, or none, gives the defaults. Part of the unity
  * build, after app.h. */
 project_t proj;
+/* the whole project is one store object: a build error here means it outgrew the flash sector */
+typedef char project_fits_the_store[sizeof(project_t) <= PLAT_STORE_MAX ? 1 : -1];
 
 static void rec_of(int i, seat_rec_t *r)        /* seat i as it is now */
 {
