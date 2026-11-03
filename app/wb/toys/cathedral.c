@@ -64,34 +64,19 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* rows ya..yb of an arch (a round top of radius r at `top`, then straight) in colour c */
-static void F(slab)(int x, int w, int top, int r, int ya, int yb, uint16_t c)
-{
-    int y;
-    for (y = ya; y < yb; y++) {
-        int dx = 0;
-        if (y < top + r) {                      /* inside the round top: how far in this row starts */
-            int dy = r - (y - top), q = 0;
-            while (q < r && (q + 1) * (q + 1) + dy * dy <= r * r) q++;
-            dx = r - q;
-        }
-        cv_rect(x + dx, y, w - 2 * dx, 1, c);
-    }
-}
-
-/* the picture: a row of arches, one a voice, each filling from the floor as its chord fades in and
- * draining as it rings out */
+/* the picture: a spire a voice, each a hollow glyph that fills from its base as its chord fades in
+ * and drains as it rings out, the voice's rune beneath on a ground line */
 static void F(draw)(toy_t *t)
 {
     cathedral_t *s = ST(cathedral_t);
-    int n = 3 + P(HEIGHT), k, w = 160 / n, r = w / 2 - 2, top = 14, h = 110;
+    int n = 3 + P(HEIGHT), k, w = 192 / n;
     for (k = 0; k < n; k++) {
-        int x = 40 + k * w + 2, lv = s->lv[k], fill = (h - 6) * lv / 1000;
-        F(slab)(x, w - 4, top, r, top, top + h, K_TEXT);
-        F(slab)(x + 3, w - 10, top + 3, r - 3, top + 3, top + h - 3, K_BG);
-        if (fill > 0)
-            F(slab)(x + 3, w - 10, top + 3, r - 3, top + h - 3 - fill, top + h - 3, pic_hue);
+        int x = 24 + k * w + w / 2;
+        pic_spire(x, 110, w - 10, 84, s->lv[k], K_SAND, pic_hue);
+        pic_rune(x - 4, 118, RUNE_CHORD + (k & 1) * (RUNE_VOICE - RUNE_CHORD), K_TEXT);
     }
+    pic_hline(16, PW - 16, 112, K_TEXT);
+    pic_hline(16, PW - 16, 113, K_TEXT);
 }
 #endif
 

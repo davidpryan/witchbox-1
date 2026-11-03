@@ -125,25 +125,28 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: sixteen grid lines, a dot per hit on its kind's row, each sat off its line by its lean,
- * swollen for a moment when it sounds */
+/* the picture: a seal with sixteen points, the bar round its rim. A hit sits on its point, kicks
+ * big in the hue, snares cream, hats small; the point sounding now swells. The playhead is a
+ * needle and a rune at the top names the toy's role */
 static void F(draw)(toy_t *t)
 {
     twostep_t *s = ST(twostep_t);
-    static const uint8_t ROW[5] = {0, 110, 74, 38, 56}, SIZE[5] = {0, 4, 3, 2, 1};
-    int i;
-    for (i = 0; i < BAR; i++)
-        pic_vline(12 + i * 14, 14, 128, i % 4 == 0 ? K_TEXT : K_SOFT);
+    static const uint8_t SIZE[5] = {0, 5, 4, 2, 2};
+    int i, at = t->steps % BAR;
+    pic_seal(PIC_CX, PIC_CY, 62, BAR, 0, K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 48, at, BAR, K_LINE);
     for (i = 0; i < BAR; i++) {
-        int kind = s->kind[i], x, big;
+        int kind = s->kind[i];
         uint16_t c;
-        if (!kind)
+        if (!kind) {
+            pic_pt(PIC_CX, PIC_CY, 48, i, BAR, 0, K_SAND);
             continue;
-        x = 12 + i * 14 + F(shift)(t, i) * 3 / 4;
-        big = SIZE[kind] + 2;
+        }
         c = kind == K_KICK ? pic_hue : kind == K_SNARE ? K_TEXT : K_SOFT;
-        pic_disc(x, ROW[kind], s->hot[i] ? big : big - 2, c);
+        pic_pt(PIC_CX, PIC_CY, 48, i, BAR, s->hot[i] ? SIZE[kind] + 2 : SIZE[kind], c);
     }
+    pic_disc(PIC_CX, PIC_CY, 4, K_TEXT);
+    pic_rune(PIC_CX - 4, PIC_CY - 34, RUNE_KICK, K_TEXT);
 }
 #endif
 

@@ -114,11 +114,12 @@ progressions, black keys 1–9 the scale. With EDIT held, white keys type the se
 
 - **The top line**: the seat number and its toy, the seed, the tempo. A message appears at the right
   for a moment when something happens (NEW SEED, SAVED, SCALE ...).
-- **The Toy page**: the toy's own picture, the one Playbox drew for it (Two-Step's limping dots on
-  their grid, Undertow's wobbling wave, Snare Rush's roll, the Crackle record turning, Arc's song
-  line ...), and for the forty newer toys a picture of their own mechanism (the Turing register as a
-  ring of bits, the automaton's rows growing, the logistic map's values, the crows on their wire).
-  Each moves with what the toy is doing. MUTED when it is.
+- **The Toy page**: the toy's picture, drawn as a seal. Every toy is a sigil: a sequencer is a
+  wheel of points with a needle for the playhead (Two-Step's bar round its rim, the Turing register
+  as a ring of runes), a swell is a glyph that fills (Cathedral's spires), a record is a star turning
+  in its ring (Crackle), and the things a toy does are runes from one fixed alphabet. Grey is idle,
+  cream is set, the toy's own hue is what sounds now. Each moves with what the toy is doing. MUTED
+  when it is.
 - **The Band page**: the eight seats, each a ghost in its toy's colour (as the Witchbox toys are)
   that sings when its seat sounds a note and goes pale when the seat is quiet, with its toy, seed,
   volume and a trail of dots for its notes, and the singers: which seat the chords, the lead and the

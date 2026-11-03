@@ -92,26 +92,27 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a record turning, a mark on its rim and one on its label; pops as specks between the
- * groove and the rim; rain streaks either side; the rumble as a trembling bar underneath */
+/* the picture: the record as a seal: a ring, a second ring, and a five-point star turning with it;
+ * the pops as sparks on its chords; the rumble as a trembling bar underneath */
 static void F(draw)(toy_t *t)
 {
     crackle_t *s = ST(crackle_t);
-    int cx = 120, cy = 66, a = s->ang * 32 / 1800, i, w;
-    pic_disc(cx, cy, 45, K_TEXT);
-    pic_disc(cx, cy, 30, K_SOFT);
-    pic_disc(cx, cy, 28, K_TEXT);
-    pic_disc(cx, cy, 13, pic_hue);
-    pic_disc(cx, cy, 2, K_BG);
-    cv_rect(cx + 37 * PIC_SIN[a & 31] / 100 - 2, cy - 37 * PIC_SIN[(a + 8) & 31] / 100 - 2, 4, 4, K_BG);
-    cv_rect(cx + 8 * PIC_SIN[a & 31] / 100 - 1, cy - 8 * PIC_SIN[(a + 8) & 31] / 100 - 1, 2, 2, K_TEXT);
+    int cx = PIC_CX, cy = 66, a = s->ang * 32 / 1800, i, w;
+    pic_circle(cx, cy, 52, K_TEXT);
+    pic_circle(cx, cy, 51, K_TEXT);
+    pic_circle(cx, cy, 46, K_SAND);
+    for (i = 0; i < 5; i++) {
+        int p = (a + i * 32 / 5) & 31, q = (a + (i + 2) * 32 / 5) & 31;
+        cv_line(pic_px(cx, 44, p), pic_py(cy, 44, p), pic_px(cx, 44, q), pic_py(cy, 44, q), pic_hue);
+    }
+    pic_disc(cx, cy, 3, pic_hue);
     for (i = 0; i < s->nspecks; i++) {
         int r = s->sr[i], ang = s->sa[i];
-        cv_rect(cx + r * PIC_SIN[ang & 31] / 100 - 1, cy - r * PIC_SIN[(ang + 8) & 31] / 100 - 1, 2, 2, pic_hue);
+        cv_rect(cx + r * PIC_SIN[ang & 31] / 100 - 1, cy - r * PIC_SIN[(ang + 8) & 31] / 100 - 1, 3, 3, pic_hue);
     }
     for (i = 0; i < 10; i++)
         if (s->dx[i])
-            cv_rect(s->dx[i], s->dy[i], 2, 5, K_SOFT);
+            cv_rect(s->dx[i], s->dy[i], 1, 4, K_SAND);
     w = P(RUMBLE) ? 15 + P(RUMBLE) * 10 + s->tremble : 0;
     if (w)
         cv_rect(cx - w / 2, 130, w, 3, K_SOFT);
