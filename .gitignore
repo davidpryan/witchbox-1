@@ -1,6 +1,4 @@
-build/
+app/build/
 .DS_Store
 __pycache__/
 *.o
-.serena/
-docs/superpowers/

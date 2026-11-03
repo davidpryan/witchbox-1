@@ -9,8 +9,7 @@ four knobs, fourteen buttons and twenty-seven keys, eight at a time, with one sc
 Installing is at your own risk: the web installer's "Return to official V15", or M-VAVE's updater,
 takes you back.
 
-- [docs/MANUAL.md](docs/MANUAL.md): the panel, the keys, the screen, the toys, saving, rescue
-- [BUILDING.md](BUILDING.md): building the package and the browser emulator
+- [docs/MANUAL.md](app/docs/MANUAL.md): the panel, the keys, the screen, the toys, saving, rescue
 - [LICENSING.md](LICENSING.md): where the code comes from
 
 ## What it is
@@ -63,35 +62,56 @@ takes you back.
   for pi32v2) and the build's checks pass: no soft-double routine linked, nothing refers to the chip's
   ROM, no register touched outside `firmware/hal/`, and the image is 460 KB of the 582 KB slot, RAM
   27 KB of 96 KB, the pool 108 KB of 336 KB. Felucca's update-path tests run against the package.
-- **The install path is HAUNT-1's, unchanged.** The update loader, the package tool, the flash
-  storage, the USB stack, the boot sequence (watchdog first, the boot-loop guard that lands in safe
-  mode after two failed starts, the stack guards) and the web installer differ from HAUNT-1's only
-  in the product's name and identity (`FM-1_5...`); HAUNT-1 has run on an FM-1 through that path.
-  The deepest stack frame is under 500 bytes against stacks of 24 KB and 8 KB, with no
+- **The platform is fm1-base, current and in use on hardware.** Under the app is
+  [fm1-base](https://github.com/charlesvestal/fm1-base) at a pinned commit (with felucca-bsp inside),
+  the layer AMB-1, CTL-1, Radio and others run on; its boot records where a start failed and shows
+  it in safe mode, its installer offers m-bootloader (a recovery menu that works even when a
+  firmware will not start), and its update path is the one those firmwares update through. An
+  earlier witchbox1 carried a private snapshot of that layer taken from HAUNT-1; an interrupted
+  update under that snapshot left an FM-1 needing a hardware recovery, which is why this one does
+  not.
+- The deepest stack frame is under 500 bytes against stacks of 24 KB and 8 KB, with no
   variable-length frames anywhere; the project record (1.3 KB) fits its 3.8 KB flash object, and
   the build refuses one that does not. A busy band of eight counts at about 49 % of the audio
   budget by host instructions (`tools/cpu.sh`), and an overrun only drops a block, it does not stop.
-- **Not verified**: witchbox1 has not run on an FM-1. The sound through the FM-1's converter and
-  speaker, the screen on its panel, the real audio load and the lights are unseen.
+- **Not verified**: witchbox1 itself has not run on an FM-1. The sound through the FM-1's converter
+  and speaker, the screen on its panel, the real audio load and the lights are unseen.
 
-## Try it in the browser
+## Building and installing
 
-`web/emu/build.sh` builds the emulator (clang with the wasm32 target, wasm-ld); open
-`build/emu/index.html` from a local web server. The band starts stopped: press PLAY.
+witchbox1 is an app on [fm1-base](https://github.com/charlesvestal/fm1-base) (`base/`, a git submodule,
+with felucca-bsp inside it): the platform layer (screen, panel, audio, USB, storage, the update loader,
+safe mode, m-bootloader, backup), the host simulator, the browser emulator and the build and install
+tools are its. Clone with `--recursive`, then:
+
+```
+pip3 install Pillow
+base/tools/get_toolchain.sh            # JieLi's compiler, to ~/.jieli
+git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
+    https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git ~/fw-AC79_AIoT_SDK
+tests/run_tests.sh                     # everything that can be tested without the hardware
+./build.sh --release 0.4               # app/build/witchbox1-0.4.fwsc
+python3 base/tools/make_site.py app app/build/witchbox1-0.4.fwsc 0.4 app/build/site   # the web installer
+```
+
+The toolchain runs on Linux x86-64; on a Mac, fm1-base's build runs it in a container. Or let GitHub
+build it: the `build` workflow runs on every push and leaves `witchbox1-firmware` (the package and
+the site with the installer) on the run's page. Install from the site's `install/` page in Chrome or
+Edge, or `python3 base/tools/fm1_install.py app/build/witchbox1-0.4.fwsc`. Read "Before you
+install" in the manual first: it says why to take m-bootloader with it.
 
 ## For developers
 
 | Path | What |
 | --- | --- |
-| `firmware/src/app/wb/` | the toys: `dice.c` (Playbox's PRNG), `settings.c` (scales, chords, what toys share), `toy.c` (knobs, clock, restart, Random), `sound.c` (which sound each toy plays), `toys/*.c` (one file a toy, `toys/all.c` lists them) |
-| `firmware/src/app/band.c`, `ui.c`, `project.c`, `app.h` | the band, the panel and screen, what is saved |
-| `firmware/src/dsp/wb_engine.{c,h}` | the sound engine (its own unit, -O2) |
-| `tools/gen_samples.py` | packs `ref/samples/*.wav` into the engine's header at build time |
-| `firmware/src/app/{main_fm1,plat_fm1,panel}.c`, `firmware/hal/`, `firmware/loader/`, the rest of `firmware/src/` | the platform (HAUNT-1's, AMB-1's and Felucca's) |
+| `app/wb/` | the toys: `dice.c` (Playbox's PRNG), `settings.c` (scales, chords, what toys share), `toy.c` (knobs, clock, restart, Random), `sound.c` (which sound each toy plays), `toys/*.c` (one file a toy, `toys/all.c` lists them) |
+| `app/band.c`, `ui.c`, `project.c`, `app.h` | the band, the panel and screen, what is saved |
+| `app/app.c`, `host.c`, `fm1.toml` | fm1-base's contract: the app's entry points, its host-simulator checks, its build settings |
+| `app/dsp/wb_engine.{c,h}` | the sound engine (its own unit, -O2) |
+| `app/tools/gen_samples.py`, `app/samples/` | the CC0 recordings, packed into the engine's header at build time |
+| `base/` | fm1-base and felucca-bsp: the platform, simulator, emulator, build and install tools |
 | `ref/` | the Playbox reference and the conformance harness (`run_ref.py`, `run_c.c`, `conform.sh`) |
-| `host/wb_host.c` | the simulator: the whole app, driven by a script, with audio and screenshots out |
-| `web/emu/` | the browser build |
-| `tests/` | `run_tests.sh` runs everything; `scenarios/*.wb` are whole-app tests |
+| `tests/` | `run_tests.sh` runs everything; `scenarios/*.wb` are whole-app tests in fm1-base's simulator |
 
 How a toy is ported: the Python rolled `rand()` (a 16-bit fraction) in a handful of shapes, and each
 has an exact integer twin (`wb/dice.h`); every sum is done in the same order on the same integers,

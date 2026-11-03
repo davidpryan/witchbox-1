@@ -1,0 +1,19 @@
+  ok toy == 5
+  ok slot2 == 5
+  ok toy == 9
+  ok page == 4
+  ok toy == 5
+  ok page == 0
+  ok toy == 3
+  ok store_writes == 3 (>0)
+  ok seat == 2
+  ok toy == 3
+  ok slot2 == 5
+  ok page == 4
+  ok seat == 2
+  ok toy == -1
+  ok seat == 1
+  ok toy == 5
+  ok toy == 0
+  ok seated == 2
+host: 5209 ms simulated, 987 blits, render 0.1% of real time (host CPU)

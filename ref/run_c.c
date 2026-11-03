@@ -5,10 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../firmware/src/app/wb/dice.c"
-#include "../firmware/src/app/wb/settings.c"
-#include "../firmware/src/app/wb/toy.c"
-#include "../firmware/src/app/wb/toys/all.c"
+#include "../app/wb/dice.c"
+#include "../app/wb/settings.c"
+#include "../app/wb/toy.c"
+#include "../app/wb/toys/all.c"
 
 static int now;
 void heard(int role, int degree, int voice, int module, int seat, int hold)

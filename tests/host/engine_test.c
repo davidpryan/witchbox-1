@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include "../../firmware/src/dsp/wb_engine.h"
+#include "wb_engine.h"
 
 static FILE *wf;
 static uint32_t wn;

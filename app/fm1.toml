@@ -1,0 +1,19 @@
+# witchbox1's build settings (fm1-base: base/tools/build.py app; ./build.sh)
+name = "WITCHBOX1"             # the build's files: witchbox1.fwsc, witchbox1-X.Y.fwsc
+id_prefix = "FM-1_5"           # package identity: dev FM-1_500, releases FM-1_5XXYYZZ (X0X is FM-1_9, AMB-1 FM-1_7, HAUNT-1 FM-1_6)
+usb_manufacturer = "WITCHBOX1"
+usb_product = "WITCHBOX1 FM-1"
+o2 = ["dsp/wb_engine.c"]       # the sound engine, at -O2
+include = ["dsp"]
+gen = ["tools/gen_samples.py {gen}/wb_samples.h"]   # the recordings packed into the engine's header
+words = "words.tsv"
+ble = false                    # no radio: the pool is the band's
+usb_audio_in = true            # the band recordable over USB
+usb_audio_out = false
+backup = true                  # the project (the band, the saved toys and bands) backed up and restored over USB
+boot_pack = true
+# the site (base/tools/make_site.py)
+tagline = "Witch house toys for the FM-1"
+repo = "https://github.com/davidpryan/witchbox-1"
+licence = "GPL-3.0-only"
+credits = "The Witchbox shelf of Playbox, on fm1-base and felucca-bsp (from Felucca by Leo Kuroshita, Hügelton Instruments); the frame is HAUNT-1's and AMB-1's."

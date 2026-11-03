@@ -1,0 +1,9 @@
+  ok seated == 4
+  ok playing == 1
+  ok notes == 87 (>60)
+  ok peak -2.4 dBFS (min -30)
+  ok peak -2.4 dBFS (max 0)
+  ok notes == 89 (>60)
+  ok peak -2.4 dBFS (max 0)
+  ok playing == 0
+host: 14875 ms simulated, 2793 blits, render 0.4% of real time (host CPU)

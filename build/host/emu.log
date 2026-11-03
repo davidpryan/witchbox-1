@@ -1,0 +1,9 @@
+  ok   it starts silent peak 0.00000
+  ok   it plays peak 0.703 rms 0.140
+  ok   the screen is drawn 4149 blits
+  ok   PLAY is lit 
+  ok   the screen is not blank 49 colours
+  ok   silence after stopping peak 0.00000
+  ok   PLAY is dark 
+  ok   and plays again rms 0.155
+  ok   SAVE writes the project 1324 B

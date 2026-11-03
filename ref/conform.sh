@@ -7,7 +7,7 @@ CC="${CC:-cc}"
 mkdir -p build/ref
 $CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -Werror -o build/ref/run_c ref/run_c.c || exit 1
 TOYS="$*"
-[ -z "$TOYS" ] && TOYS=$(grep -o '&toy_[a-z0-9]*' firmware/src/app/wb/toys/all.c | sed 's/&toy_//' | while read t; do [ -f ref/playbox/$t.py ] && echo $t; done)
+[ -z "$TOYS" ] && TOYS=$(grep -o '&toy_[a-z0-9]*' app/wb/toys/all.c | sed 's/&toy_//' | while read t; do [ -f ref/playbox/$t.py ] && echo $t; done)
 SEEDS="${SEEDS:-0 1 7 42 77 1234 2024 3333 4096 5555 6789 7777 8080 9000 9999 123 456 789 31 64}"
 MS="${MS:-30000}"
 fail=0

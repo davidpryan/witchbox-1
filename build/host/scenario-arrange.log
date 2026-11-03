@@ -1,0 +1,9 @@
+  ok notes == 78 (>10)
+  ok page == 2
+  ok seat == 6
+  ok page == 3
+  ok playing == 1
+  ok notes == 152 (>40)
+  ok peak -1.4 dBFS (max 0)
+  ok page == 1
+host: 10670 ms simulated, 2004 blits, render 0.5% of real time (host CPU)

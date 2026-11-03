@@ -1,0 +1,31 @@
+  ok seat == 1
+  ok toy == 5
+  ok seat == 0
+  ok toy == 1
+  ok seed == 1234
+  ok toy == 0
+  ok seed == 1237
+  ok seed == 2237
+  ok seed == 3742
+  ok hold == -1
+  ok knob0 == 9
+  ok knob3 == 7
+  ok tempo == 140
+  ok chords == 3
+  ok scale == 6
+  ok scale == 7
+  ok browse == 1
+  ok browse == 0
+  ok toy == 9
+  ok toy == 37
+  ok browse == 0
+  ok mute == 1
+  ok mute == 0
+  ok speed == 50
+  ok speed == 0
+  ok speed == 50
+  ok speed == 100
+  ok seed == 1425 (>-1)
+  ok seed == 3742
+  ok seated == 8
+host: 4463 ms simulated, 840 blits, render 0.1% of real time (host CPU)

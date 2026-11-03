@@ -1,0 +1,10 @@
+  ok seated == 8
+  ok playing == 1
+  ok notes == 286 (>80)
+  ok peak -1.0 dBFS (min -30)
+  ok peak -1.0 dBFS (max 0)
+  ok notes == 577 (>200)
+  ok notes == 879 (>300)
+  ok browse == 1
+  ok toy == 40
+host: 33360 ms simulated, 6258 blits, render 0.5% of real time (host CPU)

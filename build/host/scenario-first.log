@@ -1,0 +1,13 @@
+  ok playing == 0
+  ok seated == 2
+  ok toy == 0
+  ok seed == 1234
+  ok playing == 1
+  ok notes == 24 (>20)
+  ok steps == 35 (>20)
+  ok page == 1
+  ok page == 2
+  ok page == 3
+  ok page == 1
+  ok playing == 0
+host: 4801 ms simulated, 906 blits, render 0.2% of real time (host CPU)
