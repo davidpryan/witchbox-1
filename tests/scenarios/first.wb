@@ -1,0 +1,31 @@
+# Boot: two toys seated from the defaults, stopped. PLAY starts the band; notes come; stop again.
+wait 100
+expect playing 0
+expect seated 2
+expect toy 0
+expect seed 1234
+shot boot.png
+tap PLAY
+wait 4000
+expect playing 1
+expect notes >20
+expect steps >20
+shot playing.png
+spin SELECT 1
+wait 50
+expect page 1
+shot band.png
+tap SEQ
+wait 50
+expect page 2
+shot tape.png
+tap SEQ
+wait 50
+expect page 3
+shot clock.png
+tap SEQ
+wait 50
+expect page 1
+tap PLAY
+wait 100
+expect playing 0

@@ -1,0 +1,115 @@
+# The panel: seats, the shelf, seeds, knobs, the hold layers, pads.
+wait 100
+# OCT+ moves to the next seat; OCT- back
+tap OCT+
+wait 50
+expect seat 1
+expect toy 5
+tap OCT-
+wait 50
+expect seat 0
+# ALGORITHM picks the next toy on the shelf, the seed kept
+spin ALGO 1
+wait 50
+expect toy 1
+expect seed 1234
+spin ALGO -1
+wait 50
+expect toy 0
+# PRESETS turns the seed, slowly one at a time
+spin PRESET 3
+wait 50
+expect seed 1237
+# EDIT held: the knobs are the seed's digits; keys type a seed
+press EDIT
+wait 50
+spin K1 1
+wait 50
+expect seed 2237
+tapkey w4
+tapkey w2
+wait 50
+expect seed 3742
+release EDIT
+wait 50
+expect hold -1
+# the toy's knobs
+spin K1 -2
+wait 50
+expect knob0 9
+spin K4 3
+wait 50
+expect knob3 7
+# GLO held: tempo and chords
+press GLO
+wait 50
+spin K3 5
+wait 50
+expect tempo 140
+tapkey w3
+wait 50
+expect chords 3
+tapkey b6
+wait 50
+expect scale 6
+release GLO
+wait 50
+# SEL: the next dark scale (6 -> 7)
+tap SEL
+wait 50
+expect scale 7
+# HOME opens the shelf; a key picks a toy; the shelf closes
+tap HOME
+wait 50
+expect browse 1
+shot shelf.png
+tapkey w9
+wait 50
+expect browse 0
+expect toy 9
+tap HOME
+wait 50
+tap OCT+
+wait 50
+tapkey b1
+wait 50
+expect toy 37
+expect browse 0
+# ARP mutes the seat
+tap ARP
+wait 50
+expect mute 1
+tap ARP
+wait 50
+expect mute 0
+# pads: half time, freeze while held, calm
+tap PLAY
+wait 200
+tapkey b2
+wait 50
+expect speed 50
+key b4 down
+wait 50
+expect speed 0
+key b4 up
+wait 50
+expect speed 50
+tapkey b10
+wait 50
+expect speed 100
+# REC: a new seed; b1 brings the old one back
+tap REC
+wait 100
+expect seed >-1
+tapkey b1
+wait 50
+expect seed 3742
+# REC held: a random band in every seat
+press REC
+wait 700
+release REC
+wait 100
+expect seated 8
+shot random-band.png
+tap PLAY
+wait 100

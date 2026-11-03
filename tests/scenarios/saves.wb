@@ -1,0 +1,58 @@
+# Saving a toy and a band, and getting them back after a restart.
+wait 100
+tap OCT+
+wait 50
+expect toy 5
+press SAVE
+wait 50
+tapkey w2
+wait 50
+expect slot2 5
+tapkey b0
+release SAVE
+wait 100
+# change the seat, then load the slot back
+spin ALGO 4
+wait 50
+expect toy 9
+spin SELECT 4
+wait 50
+expect page 4
+shot saves.png
+tapkey w2
+wait 50
+expect toy 5
+# a restart brings the band back as it was
+spin SELECT 1
+wait 50
+expect page 0
+tap OCT+
+wait 50
+spin ALGO 3
+wait 100
+expect toy 3
+wait 3500
+expect store_writes >0
+reboot
+wait 100
+expect seat 2
+expect toy 3
+expect slot2 5
+spin SELECT 4
+wait 50
+expect page 4
+wait 50
+tapkey b0
+wait 50
+expect seat 2
+expect toy -1
+tap OCT-
+wait 50
+expect seat 1
+expect toy 5
+# another firmware's project is not ours: the defaults come back
+foreign
+reboot
+wait 100
+expect toy 0
+expect seated 2

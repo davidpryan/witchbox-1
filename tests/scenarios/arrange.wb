@@ -1,0 +1,46 @@
+# Tape and Clock: the arrangement decides which bars a seat sounds in.
+wait 100
+seat 2 coven 77
+seat 3 glassarp 55
+seat 4 crackle 3
+seat 7 hook 9
+tap PLAY
+wait 2000
+expect notes >10
+# the tape: seat 1's lane with bars 1-4 on only; a random tape for the rest
+tap SEQ
+wait 50
+expect page 2
+press REC
+wait 700
+release REC
+wait 100
+tap OCT-
+tap OCT-
+wait 50
+expect seat 6
+shot tape.png
+# the clock: a random clock, then this seat's ring by hand
+tap SEQ
+wait 50
+expect page 3
+press REC
+wait 700
+release REC
+wait 100
+spin K1 -16
+wait 50
+spin K1 5
+wait 50
+shot clock.png
+wait 6000
+expect playing 1
+expect notes >40
+expect peak_db_max 0
+# back to the band: everyone plays
+tap SEQ
+wait 50
+expect page 1
+shot band8.png
+tap PLAY
+wait 100

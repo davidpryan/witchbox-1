@@ -1,0 +1,36 @@
+# A full band plays: four seats, a conductor cutting them, the mixer, solo, and the sound stays sane.
+wait 100
+seat 2 coven 77
+seat 3 blackout 5
+expect seated 4
+wav band.wav
+tap PLAY
+wait 12000
+expect playing 1
+expect notes >60
+expect peak_db_min -30
+expect peak_db_max 0
+# a solo seat: the others are cut
+key w14 down
+wait 300
+expect notes >60
+key w14 up
+wait 100
+# the mixer
+press ENV
+wait 50
+spin K2 -4
+release ENV
+wait 50
+# the effects
+press FX
+spin K1 10
+spin K2 5
+release FX
+wait 2000
+expect peak_db_max 0
+wavstop
+tap PLAY
+wait 100
+expect playing 0
+shot stopped.png

@@ -1,0 +1,53 @@
+# Build witchbox1 on a GitHub runner: the tests, then the firmware package and the web installer.
+# It needs JieLi's package server and Gitee to be reachable from the runner (see BUILDING.md).
+name: build
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Tools for the tests
+        run: |
+          pip install Pillow
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang lld
+      - name: Tests (no hardware, no JieLi toolchain)
+        run: tests/run_tests.sh
+      - name: JieLi toolchain
+        run: tools/get_toolchain.sh
+      - name: JieLi AC79 SDK
+        run: >-
+          git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13
+          https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git "$HOME/fw-AC79_AIoT_SDK"
+      - name: Build the firmware (a development build, for the update-path tests)
+        run: ./build.sh
+      - name: Tests again, with the package (the quick sweep: the full one ran above)
+        run: QUICK=1 AC79_SDK="$HOME/fw-AC79_AIoT_SDK" tests/run_tests.sh
+      - name: Build the release
+        run: ./build.sh --release 0.3
+      - name: The web installer
+        run: python3 tools/make_installer.py build/witchbox1-0.3.fwsc 0.3 build/install
+      - uses: actions/upload-artifact@v4
+        with:
+          name: witchbox1-firmware
+          path: |
+            build/witchbox1-0.3.fwsc
+            build/install/
+            build/witchbox1.dis
+      - name: The browser emulator
+        if: always()
+        run: EN_VERSION=0.3 sh web/emu/build.sh && python3 web/emu/make_artifact.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: witchbox1-emulator
+          path: build/artifact/

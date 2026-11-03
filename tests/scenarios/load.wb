@@ -1,0 +1,8 @@
+# the audio load: a busy band of four for twenty seconds (tools/cpu.sh counts the instructions)
+wait 100
+seat 0 fourfloor 11
+seat 1 slide808 22
+seat 2 coven 33
+seat 3 glassarp 44
+tap PLAY
+wait 20000

@@ -1,0 +1,34 @@
+# The screens for the manual (docs/img).
+wait 100
+seat 2 coven 2024
+seat 3 glassarp 777
+tap PLAY
+wait 6000
+shot toy.png
+tap SEQ
+wait 50
+shot band.png
+tap SEQ
+tap HOME
+wait 50
+shot shelf.png
+tap HOME
+press GLO
+wait 100
+shot glo.png
+release GLO
+press EDIT
+wait 100
+shot edit.png
+release EDIT
+spin SELECT 2
+wait 50
+shot saves.png
+spin SELECT 1
+tap GLO
+wait 50
+shot help.png
+tap GLO
+tap PLAY
+wait 100
+expect playing 0
