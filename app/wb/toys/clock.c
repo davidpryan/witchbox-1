@@ -84,20 +84,27 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a clock face of sixteen dots, a hand that sweeps round the bar and judders when a slice
- * sticks; a hole where a step is cut to silence */
+/* the picture: the clock as a seal: a rune at every step that can sound (kick, snare, hat), a sand
+ * dot at the rest between, a hollow ring where a step is cut to silence; the hand a needle that
+ * sweeps the bar and judders in the hue while a slice is stuck */
 static void F(draw)(toy_t *t)
 {
     clock_t_ *s = ST(clock_t_);
-    static const int8_t SIN32[32] = {0, 20, 38, 56, 71, 83, 92, 98, 100, 98, 92, 83, 71, 56, 38, 20,
-                                     0, -20, -38, -56, -71, -83, -92, -98, -100, -98, -92, -83, -71, -56, -38, -20};
-    int i, half = s->togo ? 2 * s->from + s->togo % 2 : 2 * (t->steps % BAR), cx = 120, cy = 72;
+    int i, cx = PIC_CX, cy = PIC_CY, at = t->steps % BAR;
+    int half = s->togo ? 2 * s->from + s->togo % 2 : 2 * at;
+    pic_seal(cx, cy, 64, BAR, 0, K_SAND);
     for (i = 0; i < BAR; i++) {
-        int x = cx + 62 * SIN32[(i * 2) & 31] / 100, y = cy - 62 * SIN32[(i * 2 + 8) & 31] / 100;
-        pic_disc(x, y, i % 4 == 0 ? 3 : 2, s->gone[i] ? K_BG : K_TEXT);
+        int k = i == 0 ? RUNE_KICK : i % 8 == 4 ? RUNE_SNARE : RUNE_HAT, a = pic_ang(i, BAR);
+        uint16_t c = (s->togo ? i == s->from : i == at) ? pic_hue : K_TEXT;
+        if (i % 2)
+            pic_pt(cx, cy, 50, i, BAR, 0, K_SAND);
+        else if (s->gone[i])
+            pic_circle(pic_px(cx, 50, a), pic_py(cy, 50, a), 4, K_SAND);
+        else
+            pic_rune_at(cx, cy, 50, i, BAR, k, c);
     }
     {
-        int x = cx + 46 * SIN32[half & 31] / 100, y = cy - 46 * SIN32[(half + 8) & 31] / 100, k;
+        int x = pic_px(cx, 34, half), y = pic_py(cy, 34, half), k;
         for (k = -1; k <= 1; k++)
             cv_line(cx + k, cy, x + k, y, s->togo ? pic_hue : K_TEXT);
     }

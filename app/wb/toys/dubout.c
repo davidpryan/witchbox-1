@@ -78,24 +78,27 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the phrase as a bar that fills; at its end the thrown part's seat is named and rings
- * spread from it into the echo */
+/* the picture: the phrase as a wheel, a point a beat, with the beats to be thrown in the hue; the
+ * needle is the playhead; while a part is in the echo the rune of its role sits at the centre and
+ * rings spread out from it */
 static void F(draw)(toy_t *t)
 {
     dubout_t *s = ST(dubout_t);
-    int period = DU_PHRASE[P(PHRASE)], at = toy_now(t) % period, i;
-    char b[12] = "SEAT ";
-    cv_rect(20, 60, 200, 10, K_PANEL);
-    cv_rect(20, 60, at * 200 / period, 10, K_TEXT);
-    cv_rect(20 + (period - DU_LEN[P(LENGTH)]) * 200 / period, 56, 2, 18, pic_hue);
+    int period = DU_PHRASE[P(PHRASE)], len = DU_LEN[P(LENGTH)], at = toy_now(t) % period, n = period / 4, i;
+    pic_seal(PIC_CX, PIC_CY, 64, n, 0, K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 58, at / 4, n, t->playing ? K_TEXT : K_LINE);
+    for (i = 0; i < n; i++) {
+        int throw_ = i * 4 >= period - len && P(THROW) > 0;
+        pic_pt(PIC_CX, PIC_CY, 58, i, n, i == at / 4 && t->playing ? 4 : throw_ ? 3 : 1, throw_ ? pic_hue : i == at / 4 ? K_TEXT : K_SAND);
+    }
     if (s->thrown >= 0) {
-        b[5] = (char)('1' + s->thrown);
-        b[6] = 0;
-        cv_text(96, 100, &FONT_XS, b, pic_hue);
+        int role = S.roles[s->thrown], k = role == ROLE_DRUMS ? RUNE_KICK : role == ROLE_BASS ? RUNE_BASS : role == ROLE_CHORDS ? RUNE_CHORD : role == ROLE_LEAD ? RUNE_LEAD : RUNE_VOICE;
+        int ph = (int)((plat_ms() / 40u) % 12u);
         for (i = 0; i < 3; i++)
-            pic_ring(120, 90, 16 + i * 10 + (int)((plat_ms() / 50u) % 10u), 15 + i * 10 + (int)((plat_ms() / 50u) % 10u), i == 0 ? pic_hue : K_SOFT);
+            pic_circle(PIC_CX, PIC_CY, 12 + i * 12 + ph, i == 0 ? pic_hue : K_SOFT);
+        pic_rune(PIC_CX - 4, PIC_CY - 6, k, pic_hue);
     } else
-        cv_text(84, 100, &FONT_XS, "NEXT THROW", K_DIM);
+        pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_REST, K_SOFT);
 }
 #endif
 

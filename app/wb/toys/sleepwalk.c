@@ -53,24 +53,38 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the walk as a path: the chord's notes as rungs, the walker as a dot on its rung, the way
- * it came as a fading trail; an arrow for the way it is going */
+/* the picture: the chord's notes as a wheel of thirteen points, the chord tones cream, the rest sand;
+ * the walker a disc in the hue on its note, the way it came as a trail of fading points behind it
+ * and a thread of chords; the rune at the centre points the way it is going */
 static void F(draw)(toy_t *t)
 {
     sleepwalk_t *s = ST(sleepwalk_t);
     uint32_t now = plat_ms(), i;
-    int root = toy_root(t, 0) - 7, k, y;
-    for (k = -5; k <= 7; k++)
-        cv_rect(16, 112 - (k + 5) * 8, 208, 1, ((k + 70) % 7 == 0 || (k + 70) % 7 == 2 || (k + 70) % 7 == 4) ? K_LINE : K_PANEL);
+    int root = toy_root(t, 0) - 7, k, cx = PIC_CX, cy = PIC_CY, prev = -1;
+    pic_seal(cx, cy, 64, 13, 0, K_SAND);
+    for (k = -5; k <= 7; k++) {
+        int tone = (k + 70) % 7 == 0 || (k + 70) % 7 == 2 || (k + 70) % 7 == 4;
+        pic_pt(cx, cy, 48, k + 5, 13, tone ? 2 : 0, tone ? K_TEXT : K_SAND);
+    }
     for (i = 0; i < NOTE_LOG; i++) {
         const note_log_t *l = &note_log[i];
-        if (!l->at || l->seat != (uint8_t)t->seat || now - l->at > 5000u)
+        int d;
+        if (!l->at || l->seat != (uint8_t)t->seat || now - l->at > 4000u)
             continue;
-        cv_rect(200 - (int)((now - l->at) * 180u / 5000u), 112 - (l->degree - root + 5) * 8 - 1, 6, 3, K_SOFT);
+        d = l->degree - root + 5;
+        if (d < 0 || d > 12)
+            continue;
+        pic_pt(cx, cy, 48, d, 13, now - l->at < 1500u ? 3 : 2, now - l->at < 1500u ? K_SOFT : K_SAND);
+        if (prev >= 0 && prev != d)
+            pic_chord(cx, cy, 48, prev, d, 13, K_LINE);
+        prev = d;
     }
-    y = 112 - (s->deg - root + 5) * 8;
-    pic_disc(204, y, pic_ago(t, -1) < 120u ? 6 : 4, pic_hue);
-    cv_rect(214, y - (s->dir > 0 ? 6 : -4), 2, 6, K_SOFT);
+    k = s->deg - root + 5;
+    k = k < 0 ? 0 : k > 12 ? 12 : k;
+    pic_needle(cx, cy, 44, k, 13, K_LINE);
+    pic_pt(cx, cy, 48, k, 13, pic_ago(t, -1) < 120u ? 7 : 5, pic_hue);
+    pic_disc(cx, cy, 10, K_BG);
+    pic_rune(cx - 4, cy - 6, s->dir > 0 ? RUNE_UP : RUNE_DOWN, K_TEXT);
 }
 #endif
 

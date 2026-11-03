@@ -66,24 +66,31 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the tune's notes as bells hung round a ring, lit as each is struck; then the long
- * silence runs round the ring as a dimming arc */
+/* the picture: the tune's notes as a seal's points, each out from the centre by its height and joined
+ * by chords, the one struck in the hue and its echo in soft; the silence runs round the outer ring
+ * taking its sand points with it until the tune comes round again */
 static void F(draw)(toy_t *t)
 {
     hexbell_t *s = ST(hexbell_t);
     static const uint8_t SIL[3] = {16, 32, 64};
-    int n = P(NOTES), cycle = n * 2 + SIL[P(SILENCE)], at = toy_now(t) % cycle, i, cx = 120, cy = 72;
+    int n = P(NOTES), cycle = n * 2 + SIL[P(SILENCE)], at = toy_now(t) % cycle, i, k, gone;
+    pic_circle(PIC_CX, PIC_CY, 64, K_SAND);
     for (i = 0; i < n; i++) {
-        int a = (i * 32 / n) & 31, x = cx + 46 * PIC_SIN[a] / 100, y = cy - 46 * PIC_SIN[(a + 8) & 31] / 100;
+        int a = pic_ang(i, n), b = pic_ang(i + 1, n), r0 = 24 + s->tune[i] * 2, r1 = 24 + s->tune[(i + 1) % n] * 2;
+        cv_line(pic_px(PIC_CX, r0, a), pic_py(PIC_CY, r0, a), pic_px(PIC_CX, r1, b), pic_py(PIC_CY, r1, b), K_LINE);
+    }
+    if (at < n * 2 && t->playing)
+        pic_needle(PIC_CX, PIC_CY, 24 + s->tune[at / 2] * 2, at / 2, n, pic_hue);
+    for (i = 0; i < n; i++) {
         int lit = at / 2 == i && at < n * 2 && t->playing;
-        cv_rect(x - 3, y - 9 - s->tune[i] / 2, 6, 10 + s->tune[i] / 2, lit ? pic_hue : K_TEXT);
-        pic_disc(x, y + 3, 5, lit ? pic_hue : K_TEXT);
+        pic_pt(PIC_CX, PIC_CY, 24 + s->tune[i] * 2, i, n, lit ? 6 : 4, lit ? pic_hue : K_TEXT);
+        if (s->echo_at >= 0 && s->echo_deg == toy_root(t, 0) + s->tune[i])
+            pic_pt(PIC_CX, PIC_CY, 24 + s->tune[i] * 2, i, n, 2, K_SOFT);
     }
-    if (at >= n * 2) {
-        int gone = (at - n * 2) * 32 / (cycle - n * 2), k;
-        for (k = 0; k < 32 - gone; k++)
-            pic_disc(cx + 62 * PIC_SIN[k] / 100, cy - 62 * PIC_SIN[(k + 8) & 31] / 100, 1, K_SAND);
-    }
+    gone = at >= n * 2 ? (at - n * 2) * 32 / (cycle - n * 2) : 0;
+    for (k = 0; k < 32 - gone; k++)
+        pic_pt(PIC_CX, PIC_CY, 60, k, 32, 1, K_SAND);
+    pic_rune(PIC_CX - 4, PIC_CY - 6, at < n * 2 ? RUNE_LEAD : RUNE_REST, at < n * 2 ? K_TEXT : K_SAND);
 }
 #endif
 

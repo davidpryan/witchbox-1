@@ -49,24 +49,27 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the dice as bars, the slow ones at the left, their sum as the signal's level across the
- * top; pops as specks where the level is high */
+/* the picture: the dice as a row of spires, the fast ones at the left and the slow one soft at the
+ * right, each filled by its roll; their sum as an orb above that fills with the signal, in the hue
+ * past the pop line, and sparks round it on the ring when a pop goes off */
 static void F(draw)(toy_t *t)
 {
     static_t *s = ST(static_t);
-    int k, nd = P(DICE), sum = 0;
+    int k, nd = P(DICE), sum = 0, w = 200 / nd, pop = 40 + (10 - P(POPS)) * 4, hot = pic_ago(t, 0) < 100u;
     for (k = 0; k < nd; k++) {
         sum += s->dice[k];
-        cv_rect(30 + k * 36, 120 - s->dice[k] * 9, 24, s->dice[k] * 9 + 2, k == nd - 1 ? K_SOFT : K_TEXT);
+        pic_spire(20 + k * w + w / 2, 132, w - 10, 44, s->dice[k] * 1000 / 9, K_SAND, k == nd - 1 ? K_SOFT : K_TEXT);
     }
+    pic_hline(12, PW - 12, 134, K_TEXT);
     sum = sum * 10 / nd;
-    cv_rect(12, 36 - sum / 5, 216, 2, pic_hue);
-    cv_rect(12, 36 - (40 + (10 - P(POPS)) * 4) / 5, 216, 1, K_LINE);
-    if (pic_ago(t, 0) < 100u)
+    pic_circle(PIC_CX, 42, 30, K_SAND);
+    pic_orb(PIC_CX, 42, 24, sum * 1000 / 90, K_SAND, sum > pop ? pic_hue : K_SOFT);
+    pic_circle(PIC_CX, 42, 24 * pop / 90, K_LINE);
+    if (hot)
         for (k = 0; k < 6; k++)
-            cv_rect(12 + (int)(pic_hash(k, plat_ms() / 100u) % 216u), 20 + (int)(pic_hash(k, 9) % 20u), 2, 2, K_TEXT);
-    cv_text(30, 126, &FONT_XS, "FAST", K_DIM);
-    cv_text(30 + (nd - 1) * 36, 126, &FONT_XS, "SLOW", K_DIM);
+            pic_pt(PIC_CX, 42, 30, (int)(pic_hash(k, plat_ms() / 100u) & 31u), 32, 2, K_TEXT);
+    if (pic_ago(t, 1) < (uint32_t)t->step_ms * 8u)
+        pic_rune(PIC_CX - 4, 72, RUNE_NOISE, K_SOFT);
 }
 #endif
 

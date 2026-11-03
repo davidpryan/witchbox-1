@@ -56,22 +56,30 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a disc that swells with the kick's boom, and a square frame that runs out with the clap's tail */
+/* the picture: a wheel of sixteen with the kick's places marked big and the clap's with its rune;
+ * an orb at the centre that fills with the kick's boom and drains with it, and a cream ring that
+ * the clap throws out and draws in again over its tail */
 static void F(draw)(toy_t *t)
 {
     stomp_t *s = ST(stomp_t);
-    static const uint8_t RING[4] = {42, 48, 54, 60};
-    int r = 20, cx = 120, cy = 72;
-    if (s->boom)
-        r += 12 * s->boom / (120 + P(WEIGHT) * 70);
-    if (s->ring) {
-        int k = RING[imin(3, s->ring * 4 / (150 + P(TAIL) * 160))];
-        cv_rect(cx - k, cy - k, 2 * k, 3, pic_hue);
-        cv_rect(cx - k, cy + k - 3, 2 * k, 3, pic_hue);
-        cv_rect(cx - k, cy - k, 3, 2 * k, pic_hue);
-        cv_rect(cx + k - 3, cy - k, 3, 2 * k, pic_hue);
+    int cx = PIC_CX, cy = PIC_CY, at = t->steps % BAR, i, fill = 0;
+    pic_seal(cx, cy, 64, BAR, 0, K_SAND);
+    pic_needle(cx, cy, 50, at, BAR, K_LINE);
+    for (i = 0; i < BAR; i++) {
+        int size = i == 0 ? 5 : i == 6 ? 3 : (i == 12 || i == 14) ? 2 : i % 2 ? 0 : 1;
+        if (i == 8)
+            pic_rune_at(cx, cy, 56, i, BAR, RUNE_SNARE, s->ring ? pic_hue : K_TEXT);
+        else
+            pic_pt(cx, cy, 56, i, BAR, size, size && i == at && s->boom ? pic_hue : size > 1 ? K_TEXT : K_SAND);
     }
-    pic_disc(cx, cy, r, K_TEXT);
+    if (s->boom)
+        fill = 1000 * s->boom / (120 + P(WEIGHT) * 70);
+    pic_orb(cx, cy, 24, fill, K_TEXT, pic_hue);
+    if (s->ring) {
+        int k = 30 + 18 * s->ring / (150 + P(TAIL) * 160);
+        pic_circle(cx, cy, k, K_TEXT);
+        pic_circle(cx, cy, k + 1, K_TEXT);
+    }
 }
 #endif
 

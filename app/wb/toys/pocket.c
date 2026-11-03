@@ -96,30 +96,35 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the things, falling faster and faster, one bounce, then lying where they fell */
+/* the picture: a seal with a wide outer ring and a small inner one; each thing is a point that
+ * drops in from the outer ring along its own radius, faster and faster, flashes the hue as it
+ * lands on the inner ring, and lies there; the steps round the outer ring, bigger where hits
+ * are likelier; the kit's rune in the middle, the step a faint needle */
 static void F(draw)(toy_t *t)
 {
     pocket_t *s = ST(pocket_t);
-    int i;
-    pic_hline(9, 231, 128, K_SOFT);
+    static const uint8_t KIT_RUNE[4] = {RUNE_PERC, RUNE_KICK, RUNE_WAVE, RUNE_EYE};
+    int cx = PIC_CX, cy = PIC_CY, i;
+    pic_circle(cx, cy, 64, K_SAND);
+    pic_circle(cx, cy, 60, K_SAND);
+    pic_circle(cx, cy, 22, K_SAND);
+    pic_needle(cx, cy, 18, t->steps % BAR, BAR, K_LINE);
+    for (i = 0; i < BAR; i++)            /* the steps, bigger where a thing is likelier */
+        pic_pt(cx, cy, 62, i, BAR, ODDS[i] > 4 ? 1 : 0, K_SAND);
     for (i = 0; i < s->n; i++) {
-        int x = s->x[i] * 3 / 4, at = s->at[i], fall = s->fall[i], y;
+        int at = s->at[i], fall = s->fall[i], a = (s->x[i] * 32 / 320 + 16) & 31, r;
         uint16_t c;
         if (at < fall)
-            y = 6 + 117 * at / fall * at / fall;
+            r = 60 - 36 * at / fall * at / fall;
         else if (at < fall + 260) {
             int u = at - fall;
-            y = 123 - 21 * 4 * u * (260 - u) / (260 * 260);
+            r = 24 + 10 * 4 * u * (260 - u) / (260 * 260);
         } else
-            y = 123;
-        c = fall <= at && at < fall + 260 ? pic_hue : K_TEXT;
-        switch (P(KIT)) {
-        case 0: pic_disc(x, y, 3, c); break;
-        case 1: cv_rect(x - 1, y - 4, 3, 8, c); break;
-        case 2: cv_rect(x - 4, y + 1, 8, 3, c); break;
-        default: cv_rect(x - 3, y - 3, 7, 7, c); cv_rect(x - 1, y - 1, 2, 2, K_BG); break;
-        }
+            r = 24;
+        c = at < fall ? K_SOFT : at < fall + 260 ? pic_hue : K_TEXT;
+        pic_disc(pic_px(cx, r, a), pic_py(cy, r, a), 3, c);
     }
+    pic_rune(cx - 4, cy - 6, KIT_RUNE[P(KIT)], K_TEXT);
 }
 #endif
 

@@ -83,23 +83,24 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: three toms, the root's the biggest, each swelling and going purple when struck, with a
- * ring of fog that rises off it and fades as the tail dies */
+/* the picture: the two bars as a seal of thirty-two points, a hit a point sized by its tom (the
+ * root's the biggest) and in the hue while that tom rings; three orbs in a row at the centre, one
+ * a tom, that fill as it is struck and drain as its tail dies; a needle for the step */
 static void F(draw)(toy_t *t)
 {
     toms_t *s = ST(toms_t);
-    static const uint8_t X[3] = {187, 120, 52}, R[3] = {15, 13, 11};
-    int k, tail = F(tail_ms)(t);
-    for (k = 0; k < 3; k++) {
-        int left = s->ms[k], r = R[k] + (left ? 3 * left / tail + 1 : 0);
-        if (left) {
-            int y = 4 + (86 - 4) * left / tail, x = X[k] - R[k], w = 2 * R[k];
-            uint16_t c = left * 2 > tail ? K_SOFT : K_SAND;
-            cv_rect(x + 2, y, w - 4, 2, c); cv_rect(x + 2, y + 5, w - 4, 2, c);
-            cv_rect(x, y + 2, 2, 3, c); cv_rect(x + w - 2, y + 2, 2, 3, c);
-        }
-        pic_disc(X[k], 110, r, left ? pic_hue : K_TEXT);
+    static const uint8_t OR[3] = {12, 10, 8};
+    int k, cx = PIC_CX, cy = PIC_CY, at = t->steps % (2 * BAR), tail = F(tail_ms)(t);
+    pic_seal(cx, cy, 64, 8, 0, K_SAND);
+    pic_needle(cx, cy, 44, at, 2 * BAR, K_LINE);
+    for (k = 0; k < 2 * BAR; k++)
+        pic_pt(cx, cy, 52, k, 2 * BAR, k % 4 == 0 ? 1 : 0, K_SAND);
+    for (k = 0; k < P(HITS); k++) {
+        int tm = s->tom[k];
+        pic_pt(cx, cy, 52, s->step[k], 2 * BAR, 4 - tm, s->ms[tm] ? pic_hue : K_TEXT);
     }
+    for (k = 0; k < 3; k++)
+        pic_orb(cx + (1 - k) * 30, cy, OR[k], s->ms[k] * 1000 / tail, s->ms[k] ? K_TEXT : K_SAND, pic_hue);
 }
 #endif
 

@@ -87,31 +87,35 @@ static void F(play_changed)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a comb of eight teeth (bent by Sour), a cylinder of pins creeping up to it, the tooth
- * plucked lit for a moment, and the wind-up key, seen flat or edge on while it is wound */
+/* the picture: the tune as a seal: a point a note round the ring, higher notes further out, joined
+ * in a crooked polygon (bent more by Sour); the note just plucked big in the hue; the pins' creep
+ * as a needle easing round to the next; the spring an orb at the centre that drains as it runs
+ * down and fills again, cream, while it is wound */
 static void F(draw)(toy_t *t)
 {
     musicbox_t *s = ST(musicbox_t);
     static const int8_t BENT[8] = {3, -2, 5, -4, 1, -5, 4, -1};
-    int k, r, key = s->rewind ? (s->rewind / 90) % 2 : 0, x0 = 36, y0 = 60, pitch = 13;
-    cv_rect(42, 6, 156, 9, K_TEXT);                                 /* the comb's back */
-    for (k = 0; k < 8; k++) {
-        int h = (44 - k * 2 + BENT[k] * P(SOUR) / 5) * 3 / 4, tx = 52 + k * 20;
-        cv_rect(tx - 6, 15, 12, h, k == s->hot ? pic_hue : K_TEXT);
+    int n = P(SIZE), i, cx = PIC_CX, cy = PIC_CY, wind = P(WIND) * BAR * t->step_ms, fill, a, last = (s->i + n - 1) % n;
+    pic_seal(cx, cy, 64, 16, 0, K_SAND);
+    for (i = 0; i < n; i++) {
+        int k = MB_TUNE[i], k2 = MB_TUNE[(i + 1) % n];
+        int r = 28 + k * 3 + BENT[k] * P(SOUR) / 5, r2 = 28 + k2 * 3 + BENT[k2] * P(SOUR) / 5;
+        int a1 = pic_ang(i, n), a2 = pic_ang(i + 1, n);
+        cv_line(pic_px(cx, r, a1), pic_py(cy, r, a1), pic_px(cx, r2, a2), pic_py(cy, r2, a2), K_SAND);
     }
-    cv_rect(x0, y0, 162, 66, K_TEXT);                               /* the cylinder */
-    cv_rect(x0, y0, 5, 66, K_SOFT);
-    cv_rect(x0 + 157, y0, 5, 66, K_SOFT);
-    for (r = 0; r < 5; r++) {                                       /* the pins in view */
-        int tk = MB_TUNE[(s->i + r) % P(SIZE)], y = y0 + (r + 1) * pitch - s->off * pitch / 16;
-        if (y >= y0 && y + 4 <= y0 + 66)
-            cv_rect(52 + tk * 20 - 4, y, 8, 4, RGB(43, 45, 66));
+    a = ((last * 16 + s->off) * 32 / (n * 16)) & 31;
+    cv_line(cx, cy, pic_px(cx, 26, a), pic_py(cy, 26, a), K_LINE);
+    for (i = 0; i < n; i++) {
+        int k = MB_TUNE[i], r = 28 + k * 3 + BENT[k] * P(SOUR) / 5, hot = i == last && s->hot >= 0;
+        pic_pt(cx, cy, r, i, n, hot ? 4 : 2, hot ? pic_hue : K_TEXT);
     }
-    cv_rect(x0 + 162, 92, 9, 5, K_SOFT);                            /* the key's shaft */
-    if (key)
-        cv_rect(x0 + 171 + 8, 80, 5, 28, K_TEXT);
+    if (s->rewind)
+        fill = 1000 - s->rewind * 1000 / 900;
+    else if (s->run >= wind)
+        fill = 150 * 2 * t->step_ms / imax(1, s->gap);
     else
-        cv_rect(x0 + 171, 90, 21, 8, K_TEXT);
+        fill = 1000 - s->run * 850 / imax(1, wind);
+    pic_orb(cx, cy, 14, imax(0, imin(1000, fill)), K_SAND, s->rewind ? K_TEXT : pic_hue);
 }
 #endif
 

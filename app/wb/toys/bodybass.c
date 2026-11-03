@@ -59,23 +59,32 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a staircase of the chord's notes; the bass as a dot that steps between them, and the
- * trail it has walked */
+/* the picture: the chord's notes as the points of a seal, low at the top going round; the bass is the
+ * needle, its point big in the hue when plucked, and the notes it has walked through this while sit
+ * on the ring in cream, fading to sand as they age; the bass rune at the centre */
 static void F(draw)(toy_t *t)
 {
     bodybass_t *s = ST(bodybass_t);
     int8_t tones[12];
     uint32_t now = plat_ms(), i;
-    int root = toy_root(t, 0) - 7, n = tune_tones(root, root - 2, root + 9, tones), k;
+    int root = toy_root(t, 0) - 7, n = tune_tones(root, root - 2, root + 9, tones), k, cur = 0;
+    pic_seal(PIC_CX, PIC_CY, 64, n, 1, K_SAND);
     for (k = 0; k < n; k++)
-        cv_rect(16, 124 - (tones[k] - root + 2) * 9, 208, 1, K_LINE);
+        if (tones[k] == s->deg)
+            cur = k;
     for (i = 0; i < NOTE_LOG; i++) {
         const note_log_t *l = &note_log[i];
         if (!l->at || l->seat != (uint8_t)t->seat || now - l->at > 4000u)
             continue;
-        cv_rect(224 - (int)((now - l->at) * 200u / 4000u) - 4, 124 - (l->degree - root + 2) * 9 - 2, 8, 4, K_SOFT);
+        for (k = 0; k < n; k++)
+            if (tones[k] == l->degree)
+                pic_pt(PIC_CX, PIC_CY, 58, k, n, 3, now - l->at < 1500u ? K_TEXT : K_SOFT);
     }
-    pic_disc(224, 124 - (s->deg - root + 2) * 9, pic_ago(t, -1) < 120u ? 6 : 4, pic_hue);
+    for (k = 0; k < n; k++)
+        pic_pt(PIC_CX, PIC_CY, 58, k, n, 1, K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 58, cur, n, t->playing ? pic_hue : K_LINE);
+    pic_pt(PIC_CX, PIC_CY, 58, cur, n, pic_ago(t, -1) < 120u ? 7 : 5, pic_hue);
+    pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_BASS, K_TEXT);
 }
 #endif
 

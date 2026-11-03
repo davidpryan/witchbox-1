@@ -92,26 +92,30 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: fifteen keys; drops fall on them, swaying with Wow, and a key struck goes dark for a
- * moment, darker the duller the tone */
+/* the picture: fifteen keys as points round a seal; each drop sets out from the centre and falls
+ * outward to its key, swaying with Wow, and the key it strikes swells for a moment, in the hue, or
+ * only to sand when the tone is dull; the chord rune in the middle */
 static void F(draw)(toy_t *t)
 {
     wetpiano_t *s = ST(wetpiano_t);
     static const int8_t SWAY[8] = {0, 1, 2, 1, 0, -1, -2, -1};
-    int k, beat = 4 * t->step_ms;
+    int k, beat = 4 * t->step_ms, cx = PIC_CX, cy = PIC_CY;
+    pic_seal(cx, cy, 64, WP_KEYS, 0, K_SAND);
     for (k = 0; k < WP_KEYS; k++) {
-        uint16_t c = K_TEXT;
         if (s->ring[k])
-            c = P(DULL) > 7 ? K_SAND : pic_hue;
-        cv_rect(8 + k * 15, 112, 14, 26, c);
+            pic_pt(cx, cy, 52, k, WP_KEYS, 5, P(DULL) > 7 ? K_SAND : pic_hue);
+        else
+            pic_pt(cx, cy, 52, k, WP_KEYS, 2, K_TEXT);
     }
     for (k = 0; k < s->n; k++) {
-        int key = s->key[k], y = 108 - s->ms[k] * 82 / beat, x;
-        if (y < 4 || s->ms[k] <= 0)
+        int key = s->key[k], r = 50 - s->ms[k] * 50 / beat, a, x;
+        if (r < 4 || s->ms[k] <= 0 || key < 0 || key >= WP_KEYS)
             continue;
-        x = 8 + key * 15 + 7 + P(WOW) * SWAY[(y >> 3) & 7] / 4;
-        pic_disc(x, y, 2, pic_hue);
+        a = pic_ang(key, WP_KEYS);
+        x = pic_px(cx, r, a) + P(WOW) * SWAY[(r >> 2) & 7] / 4;
+        pic_disc(x, pic_py(cy, r, a), 2, pic_hue);
     }
+    pic_rune(cx - 4, cy - 6, RUNE_CHORD, K_TEXT);
 }
 #endif
 

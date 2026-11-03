@@ -51,23 +51,34 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: each whisper as a breath, a soft oval that drifts up and fades; a burst leaves a few at
- * once */
+/* the picture: a seal with the voice rune at its heart; each whisper a ring that opens on the seal
+ * where it landed and widens as it fades, in the hue while it breathes and sand after, a second
+ * voice soft; a burst leaves several rings opening at once */
 static void F(draw)(toy_t *t)
 {
+    whisper_t *s = ST(whisper_t);
     uint32_t now = plat_ms(), i;
+    int cx = PIC_CX, cy = PIC_CY, k;
+    pic_seal(cx, cy, 64, 6, 0, K_SAND);
+    for (k = 0; k < 6; k++)
+        pic_pt(cx, cy, 58, k, 6, 0, K_SAND);
     for (i = 0; i < NOTE_LOG; i++) {
         const note_log_t *l = &note_log[i];
-        int x, y, w, k;
+        uint32_t age;
+        int a, r, x, y;
         if (!l->at || l->seat != (uint8_t)t->seat || now - l->at > 3000u)
             continue;
-        x = 30 + (int)(pic_hash(l->at, 3) % 180u);
-        y = 110 - (int)((now - l->at) * 80u / 3000u);
-        w = 10 + (int)((now - l->at) * 20u / 3000u);
-        for (k = -2; k <= 2; k++)
-            cv_rect(x - w / 2 + k * k, y + k * 2, w - k * k * 2, 1, now - l->at < 500u ? (l->voice ? K_SOFT : pic_hue) : K_SAND);
+        age = now - l->at;
+        a = (int)(pic_hash(l->at, 3) & 31u);
+        r = 20 + (int)(pic_hash(l->at, 7) % 24u);
+        x = pic_px(cx, r, a);
+        y = pic_py(cy, r, a);
+        pic_circle(x, y, 3 + (int)(age * 14u / 3000u), age < 600u ? (l->voice ? K_SOFT : pic_hue) : K_SAND);
+        if (age < 600u)
+            pic_disc(x, y, 2, l->voice ? K_SOFT : pic_hue);
     }
-    cv_text(96, 128, &FONT_XS, "...", K_DIM);
+    pic_disc(cx, cy, 10, K_BG);
+    pic_rune(cx - 4, cy - 6, RUNE_VOICE, s->burst > 0 ? pic_hue : K_TEXT);
 }
 #endif
 

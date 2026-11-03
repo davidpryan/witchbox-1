@@ -81,23 +81,28 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the break's eight slices as blocks in the order they now play, each with the number of
- * the slice it really is; the slot playing is lit, a repeat shows twice */
+/* the picture: the break as a wheel of eight slots; a chord runs from each slot to where its slice
+ * really belongs, so a swapped break is a tangle; the slot playing is the needle's, in the hue, and a
+ * repeat shows as the hold rune at the centre */
 static void F(draw)(toy_t *t)
 {
     chopbreak_t *s = ST(chopbreak_t);
-    static const uint8_t WAVE[8] = {60, 30, 48, 26, 56, 34, 52, 40};
-    int i, now = (t->steps % BAR) / 2;
-    char b[4];
+    int i, now = (t->steps % BAR) / 2, sub = t->steps % 2;
+    pic_seal(PIC_CX, PIC_CY, 64, 8, 0, K_SAND);
+    for (i = 0; i < 8; i++)
+        if (s->order[i] != i)
+            pic_chord(PIC_CX, PIC_CY, 50, i, s->order[i], 8, K_SOFT);
+    pic_needle(PIC_CX, PIC_CY, 50, now, 8, t->playing ? pic_hue : K_LINE);
     for (i = 0; i < 8; i++) {
-        int x = 8 + i * 29, slice = s->order[i], h = WAVE[slice];
-        uint16_t c = i == now && t->playing ? pic_hue : slice == i ? K_TEXT : K_SOFT;
-        cv_rect(x, 100 - h, 24, h, c);
-        itoa_s(slice + 1, b);
-        cv_text(x + 8, 108, &FONT_XS, b, i == now && t->playing ? pic_hue : K_DIM);
+        int cur = i == now && t->playing;
+        pic_pt(PIC_CX, PIC_CY, 50, i, 8, cur ? 6 - sub * 2 : s->order[i] == i ? 3 : 4, cur ? pic_hue : s->order[i] == i ? K_TEXT : K_SOFT);
     }
+    for (i = 0; i < BAR; i++)
+        pic_pt(PIC_CX, PIC_CY, 61, i, BAR, 0, i == t->steps % BAR && t->playing ? K_TEXT : K_SAND);
     if (s->hold >= 0)
-        cv_text(8, 126, &FONT_XS, "REPEAT", K_SOFT);
+        pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_HOLD, K_TEXT);
+    else
+        pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_KICK, K_SAND);
 }
 #endif
 

@@ -176,23 +176,35 @@ static void F(play_changed)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a ruler of beats, and each burst as a jagged line, note to note, that curls and shoots
- * off at the squeal; in colour while it sounds, then grey, then gone */
+/* the picture: a ruler of sixteen points round a seal, and each burst as a jagged line wound
+ * round inside it, note to note, further out the higher, that shoots in or out at the squeal; in
+ * the hue while it sounds, then sand, then gone; the noise rune in the middle, lit through a burst */
+static int F(sx)(int cx, int r, int a)   /* a point at an angle in 256ths of a turn */
+{
+    int lo = (a >> 3) & 31, hi = (lo + 1) & 31, f = a & 7;
+    return cx + r * (PIC_SIN[lo] * 8 + (PIC_SIN[hi] - PIC_SIN[lo]) * f) / 800;
+}
 static void F(draw)(toy_t *t)
 {
     screamer_t *s = ST(screamer_t);
-    int i, k, upto = s->painting ? s->paint_k : s->npts - 1;
+    int i, k, upto = s->painting ? s->paint_k : s->npts - 1, cx = PIC_CX, cy = PIC_CY;
     uint16_t c;
-    for (i = 0; i < 17; i++)
-        cv_rect(11 + i * 14, 134, 2, i % 4 == 0 ? 5 : 3, K_SAND);
+    pic_circle(cx, cy, 64, K_SAND);
+    for (i = 0; i < 16; i++)
+        pic_pt(cx, cy, 64, i, 16, i % 4 == 0 ? 2 : 1, K_SAND);
+    pic_needle(cx, cy, 60, t->steps % BAR, BAR, K_LINE);
+    pic_rune(cx - 4, cy - 6, RUNE_NOISE, s->left ? pic_hue : K_SOFT);
     if (s->ink == INK_GROUND && !s->painting)
         return;
     for (k = 0; k + 1 < s->npts; k++) {
         int ink = s->painting && k < upto ? s->paint_c : s->ink;
+        int a0 = (s->px[k] - 16) * 256 / 288, a1 = (s->px[k + 1] - 16) * 256 / 288;
+        int r0 = 20 + (SC_BOT - s->py[k]) * 38 / (SC_BOT - SC_TOP), r1 = 20 + (SC_BOT - s->py[k + 1]) * 38 / (SC_BOT - SC_TOP);
         if (ink == INK_GROUND)
             continue;
         c = ink == INK_HUE ? pic_hue : ink == INK_SAND ? K_SAND : K_TEXT;
-        cv_line(s->px[k] * 3 / 4, (s->py[k] - 26) * 3 / 4, s->px[k + 1] * 3 / 4, (s->py[k + 1] - 26) * 3 / 4, c);
+        cv_line(F(sx)(cx, r0, a0), F(sx)(cy, -r0, a0 + 64), F(sx)(cx, r1, a1), F(sx)(cy, -r1, a1 + 64), c);
+        cv_line(F(sx)(cx, r0, a0), F(sx)(cy, -r0, a0 + 64) + 1, F(sx)(cx, r1, a1), F(sx)(cy, -r1, a1 + 64) + 1, c);
     }
 }
 #endif

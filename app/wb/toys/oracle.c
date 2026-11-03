@@ -68,22 +68,29 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the table of chances as a grid, brighter where a step is likelier; the row of the note
- * just played lit, and the note it chose */
+/* the picture: the scale's steps as points round a seal, each step's favourite next step a chord
+ * to it; from the note just played, the roads it may take in the hue, heavier where likelier, and
+ * the note it chose big; the eye at the centre on an orb that fills with entropy */
 static void F(draw)(toy_t *t)
 {
     oracle_t *s = ST(oracle_t);
-    int a, b, n = P(RANGE), cell = 112 / n;
+    int a, b, n = P(RANGE), cx = PIC_CX, cy = PIC_CY, from = s->last % n, hot = pic_ago(t, -1) < 150u;
+    pic_seal(cx, cy, 64, n, 0, K_SAND);
     for (a = 0; a < n; a++)
-        for (b = 0; b < n; b++) {
-            int w = s->table[a % n][b] + P(ENTROPY) * 2;
-            uint16_t c = w >= 16 ? K_TEXT : w >= 8 ? K_SOFT : w >= 3 ? K_SAND : K_PANEL;
-            if (a == s->last % n)
-                c = b == s->last ? pic_hue : w >= 8 ? K_TEXT : K_SOFT;
-            cv_rect(64 + b * cell, 12 + a * cell, cell - 1, cell - 1, c);
-        }
-    cv_text(4, 12, &FONT_XS, "FROM", K_DIM);
-    cv_text(64, 128, &FONT_XS, "TO", K_DIM);
+        for (b = 0; b < n; b++)
+            if (a != from && a != b && s->table[a][b] >= 16)
+                pic_chord(cx, cy, 48, a, b, n, K_LINE);
+    for (b = 0; b < n; b++) {
+        int w = s->table[from][b] + P(ENTROPY) * 2;
+        if (b != from && w >= 8)
+            pic_chord(cx, cy, 48, from, b, n, w >= 16 ? pic_hue : K_SOFT);
+    }
+    for (a = 0; a < n; a++) {
+        int on = a == s->last;
+        pic_pt(cx, cy, 48, a, n, on ? (hot ? 7 : 5) : 3, on ? pic_hue : K_TEXT);
+    }
+    pic_orb(cx, cy, 16, P(ENTROPY) * 100, K_SAND, K_PANEL);
+    pic_rune(cx - 4, cy - 6, RUNE_EYE, hot ? pic_hue : K_TEXT);
 }
 #endif
 

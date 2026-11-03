@@ -68,25 +68,30 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the bar as sixteen columns: the bell's note on each step as a block at its height,
- * the kicks and the clap marked under; a playhead */
+/* the picture: the bar as a wheel of sixteen; the bell's notes on the outer ring, out from the centre
+ * by their height, the kicks as big points and the clap as a snare rune on the inner ring, the hats as
+ * sand dots; the needle is the playhead and what sounds now is in the hue */
 static void F(draw)(toy_t *t)
 {
     phonk_t *s = ST(phonk_t);
     int i, now = t->steps % BAR;
-    pic_hline(8, 232, 100, K_LINE);
+    pic_seal(PIC_CX, PIC_CY, 64, BAR, 0, K_SAND);
+    pic_circle(PIC_CX, PIC_CY, 26, K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 58, now, BAR, t->playing ? pic_hue : K_LINE);
     for (i = 0; i < BAR; i++) {
-        int x = 8 + i * 14;
+        int cur = i == now && t->playing;
         if (s->on[i])
-            cv_rect(x, 96 - s->deg[i] * 7, 10, 5, i == now && t->playing ? pic_hue : K_TEXT);
+            pic_pt(PIC_CX, PIC_CY, 40 + s->deg[i] * 2, i, BAR, cur ? 5 : 3, cur ? pic_hue : K_TEXT);
+        else
+            pic_pt(PIC_CX, PIC_CY, 58, i, BAR, 0, K_SAND);
         if (i == 0 || i == 10)
-            cv_rect(x, 106, 10, 8, i == now && t->playing ? pic_hue : K_SOFT);
+            pic_pt(PIC_CX, PIC_CY, 26, i, BAR, cur ? 6 : 4, cur ? pic_hue : K_SOFT);
         else if (i == 8)
-            cv_rect(x + 2, 106, 6, 8, i == now && t->playing ? pic_hue : K_SOFT);
-        else if (i % 2 == 0)
-            cv_rect(x + 4, 110, 2, 4, K_SAND);
+            pic_rune_at(PIC_CX, PIC_CY, 26, i, BAR, RUNE_SNARE, cur ? pic_hue : K_SOFT);
+        else if (i % 2 == 0 && P(HATS) > 0)
+            pic_pt(PIC_CX, PIC_CY, 26, i, BAR, 1, cur ? K_TEXT : K_SAND);
     }
-    pic_bar(t->steps, BAR);
+    pic_disc(PIC_CX, PIC_CY, 3, K_TEXT);
 }
 #endif
 

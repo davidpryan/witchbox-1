@@ -97,25 +97,28 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a bar for each seat, white while it plays, dark while it is cut, grey when empty, its
- * job written under; the noise swell as a line that climbs beside the bars into the cut */
+/* the picture: the band as a seal, a rune a seat for its job round the ring, cream while it plays,
+ * dark and crossed through in the hue while it is cut, sand where the seat is empty; the noise
+ * swell an orb at the centre filling into the cut; the bars till the next cut as points on the
+ * outer ring, with a needle for the bar now */
 static void F(draw)(toy_t *t)
 {
     blackout_t *s = ST(blackout_t);
+    static const uint8_t RUNE[NROLES] = {RUNE_REST, RUNE_KICK, RUNE_BASS, RUNE_CHORD, RUNE_LEAD, RUNE_VOICE, RUNE_NOISE, RUNE_EYE};
     const uint8_t *roles = F(roles)();
-    int i, n = S.band ? SEATS : 4, y0 = 18, y1 = 104, line = s->line ? (s->line - 26) * 3 / 4 : 0;
+    int i, n = S.band ? SEATS : 4, every = BO_EVERY[P(EVERY)], bar = toy_bar(t) % every, cx = PIC_CX, cy = PIC_CY;
+    int fill = s->line ? imax(0, imin(1000, (194 - s->line) * 1000 / 152)) : 0;
+    pic_seal(cx, cy, 64, every, 0, K_SAND);
+    for (i = 0; i < every; i++)
+        pic_pt(cx, cy, 64, i, every, i == bar ? 2 : 1, i == bar ? K_TEXT : K_SAND);
+    pic_needle(cx, cy, 58, bar, every, K_LINE);
     for (i = 0; i < n; i++) {
-        int x = pic_col(i, n, 9), w = n > 4 ? 20 : 33;
-        uint16_t c = S.cuts[i] ? K_PANEL : roles[i] ? K_TEXT : K_SAND;
-        cv_rect(x - w / 2, y0, w, y1 - y0, c);
-        if (line) {
-            cv_rect(x - w / 2 - 6, line, 5, 2, pic_hue);
-            cv_rect(x + w / 2 + 1, line, 5, 2, pic_hue);
-        }
-        cv_text(x - 14, y1 + 4, &FONT_XS, roles[i] == ROLE_DRUMS ? "DRUM" : roles[i] == ROLE_BASS ? "BASS" :
-                roles[i] == ROLE_CHORDS ? "CHRD" : roles[i] == ROLE_LEAD ? "LEAD" : roles[i] == ROLE_VOICE ? "VOX" :
-                roles[i] == ROLE_TEXTURE ? "TEX" : roles[i] == ROLE_CONDUCTOR ? "CND" : "-", K_SOFT);
+        int a = pic_ang(i, n), x = pic_px(cx, 44, a) - 4, y = pic_py(cy, 44, a) - 6;
+        pic_rune(x, y, RUNE[roles[i] % NROLES], S.cuts[i] ? K_LINE : roles[i] ? K_TEXT : K_SAND);
+        if (S.cuts[i])
+            pic_rune(x, y, RUNE_CROSS, pic_hue);
     }
+    pic_orb(cx, cy, 20, fill, s->cutting ? pic_hue : K_SAND, pic_hue);
 }
 #endif
 

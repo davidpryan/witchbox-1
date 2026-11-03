@@ -105,24 +105,28 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: two lanes, two bars long: what the lead played above, and the shadow's own notes
- * below, in colour; the columns are wiped a little ahead of the step */
+/* the picture: two rings interlocked, two bars round each: the lead's notes as points on the left
+ * ring (soft where it was only the chord's top), the shadow's own on the right in the hue, a point
+ * further out the higher the note; a needle in each for the step; a lead rune over the one, an eye
+ * over the other */
 static void F(draw)(toy_t *t)
 {
     shadow_t *s = ST(shadow_t);
-    int lane, col;
-    cv_text(4, 24, &FONT_XS, "LEAD", K_SOFT);
-    cv_text(4, 94, &FONT_XS, "SHADOW", K_SOFT);
+    int lane, col, at = t->steps % 32;
     for (lane = 0; lane < 2; lane++) {
-        int top = lane ? 74 : 4;
-        cv_rect(48, top + 66, 192, 1, K_SAND);
+        int cx = lane ? 170 : 70, cy = 78;
+        pic_seal(cx, cy, 52, 32, 0, K_SAND);
+        pic_needle(cx, cy, 40, at, 32, K_LINE);
+        pic_rune(cx - 4, 8, lane ? RUNE_EYE : RUNE_LEAD, lane ? pic_hue : K_TEXT);
         for (col = 0; col < 32; col++) {
             int8_t v = lane ? s->mine[col] : s->heard[col];
             int n;
-            if (v == SH_EMPTY)
+            if (v == SH_EMPTY) {
+                pic_pt(cx, cy, 40, col, 32, 0, K_SAND);
                 continue;
+            }
             n = imax(0, imin(21, v));
-            cv_rect(48 + col * 6, top + 66 - 4 - n * 3, 5, 3, lane ? pic_hue : s->hkind[col] ? K_SOFT : K_TEXT);
+            pic_pt(cx, cy, 22 + n, col, 32, 2, lane ? pic_hue : s->hkind[col] ? K_SOFT : K_TEXT);
         }
     }
 }

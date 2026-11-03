@@ -48,23 +48,28 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the chord as its notes stacked on a keyboard, with the extras on top; it lands late, so
- * the beat's mark and the chord's are apart; the keys struck light for a moment */
+/* the picture: the seven degrees as the points of a seal and the chord as the chords joining the ones
+ * it uses, extras in soft; the bar's steps round the rim with the beats it lands on in the hue, a
+ * step or two past the beat marks; the chord lights while it rings and the needle is the playhead */
 static void F(draw)(toy_t *t)
 {
-    int k, root = toy_root(t, 0), n = 3 + P(EXTRA);
-    for (k = 0; k < 15; k++) {
-        uint32_t ago = pic_ago_deg(t, k);
-        cv_rect(8 + k * 15, 96, 14, 36, ago < 400u ? pic_hue : K_TEXT);
+    static const uint8_t EVERY[3] = {16, 8, 4};
+    int k, root = toy_root(t, 0), n = 3 + P(EXTRA), every = EVERY[P(RATE)], now = t->steps % BAR;
+    uint16_t c = pic_ago(t, -1) < 500u ? pic_hue : K_TEXT;
+    pic_circle(PIC_CX, PIC_CY, 64, K_SAND);
+    pic_circle(PIC_CX, PIC_CY, 44, K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 60, now, BAR, t->playing ? K_SOFT : K_LINE);
+    for (k = 0; k < BAR; k++) {
+        int beat = k % every == 0, land = (k - P(LATE)) % every == 0 && k >= P(LATE);
+        pic_pt(PIC_CX, PIC_CY, 60, k, BAR, land ? 3 : beat ? 2 : 0, land ? pic_hue : beat ? K_TEXT : K_SAND);
     }
-    for (k = 0; k < n; k++) {
-        int deg = (root + 2 * k) % 14;
-        cv_rect(8 + deg * 15 + 2, 80 - k * 10, 10, 6, k < 3 ? K_TEXT : K_SOFT);
-    }
-    cv_text(8, 8, &FONT_XS, "BEAT", K_DIM);
-    cv_rect(40, 10, 2, 10, K_SOFT);
-    cv_rect(40 + P(LATE) * 14, 10, 2, 10, pic_hue);
-    cv_text(8, 24, &FONT_XS, "LATE", K_DIM);
+    for (k = 0; k < 7; k++)
+        pic_pt(PIC_CX, PIC_CY, 38, k, 7, 1, K_SAND);
+    for (k = 0; k + 1 < n; k++)
+        pic_chord(PIC_CX, PIC_CY, 38, (root + 2 * k) % 7, (root + 2 * k + 2) % 7, 7, k < 2 ? c : K_SOFT);
+    for (k = 0; k < n; k++)
+        pic_pt(PIC_CX, PIC_CY, 38, (root + 2 * k) % 7, 7, k < 3 ? 4 : 3, k < 3 ? c : K_SOFT);
+    pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_CHORD, K_TEXT);
 }
 #endif
 

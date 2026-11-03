@@ -60,21 +60,35 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the loop as a row of threads, one a step, each at its note's height, rests as gaps;
- * the thread being read lit, and the ones just rewoven in the colour too */
+/* the picture: the loop as a wheel, a point a step, each pushed out from the ring by its note so the
+ * thread of chords between them is the tune's shape; rests are grains on the ring; the read head a
+ * needle, the thread being read in the hue */
 static void F(draw)(toy_t *t)
 {
     loom_t *s = ST(loom_t);
-    static const uint8_t LEN[3] = {8, 16, 32};
-    int len = LEN[P(LENGTH)], i, w = 224 / len;
-    for (i = 0; i < len; i++) {
-        int v = s->reg[i], x = 8 + i * w;
+    int len = LM_LEN[P(LENGTH)], i, cx = PIC_CX, cy = PIC_CY, head = (s->at + len - 1) % len, prev = -1, pr = 0;
+    pic_circle(cx, cy, 64, K_SAND);
+    pic_circle(cx, cy, 34, K_SAND);
+    for (i = 0; i <= len; i++) {
+        int k = i % len, v = s->reg[k], r = v == 99 ? 0 : 36 + v * 2;
         if (v == 99)
-            cv_rect(x, 120, w - 1, 2, K_SAND);
-        else
-            cv_rect(x, 120 - v * 7, w - 1, v * 7 + 2, i == (s->at + len - 1) % len && t->playing ? pic_hue : K_TEXT);
+            continue;
+        if (prev >= 0) {
+            int a = pic_ang(prev, len), b = pic_ang(k, len);
+            cv_line(pic_px(cx, pr, a), pic_py(cy, pr, a), pic_px(cx, r, b), pic_py(cy, r, b), K_LINE);
+        }
+        prev = k;
+        pr = r;
     }
-    cv_rect(8 + ((s->at + len - 1) % len) * w, 6, w - 1, 3, pic_hue);
+    pic_needle(cx, cy, 32, head, len, t->playing ? pic_hue : K_LINE);
+    for (i = 0; i < len; i++) {
+        int v = s->reg[i], lit = i == head && t->playing;
+        if (v == 99)
+            pic_pt(cx, cy, 34, i, len, 0, K_SAND);
+        else
+            pic_pt(cx, cy, 36 + v * 2, i, len, lit ? 5 : len > 16 ? 2 : 3, lit ? pic_hue : K_TEXT);
+    }
+    pic_disc(cx, cy, 3, K_TEXT);
 }
 #endif
 

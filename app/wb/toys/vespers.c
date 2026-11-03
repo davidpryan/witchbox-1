@@ -56,20 +56,25 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the chant as a long low bar at the note's height, and a second above it when the second
- * line sings; both breathe in colour while they sound */
+/* the picture: the chord's seven notes as the points of a seal; the chant is the needle, its note big
+ * in the hue, the second line's note in soft above it; the orb at the centre is the held breath,
+ * full at the start of each note and draining as it is sung out, by the clock */
 static void F(draw)(toy_t *t)
 {
     vespers_t *s = ST(vespers_t);
-    int root = toy_root(t, 0) - 7, y = 112 - (s->deg - root) * 6, y2 = 112 - (s->up - root) * 6;
-    uint32_t ago = pic_ago(t, 0);
-    int k;
+    int root = toy_root(t, 0) - 7, every = VP_HOLD[P(HOLD)], at = toy_now(t) % every, k;
+    int lo = imax(0, imin(6, s->deg - root)), up = imax(0, imin(13, s->up - root)), on = t->playing;
+    pic_seal(PIC_CX, PIC_CY, 64, 7, 0, K_SAND);
     for (k = 0; k < 7; k++)
-        cv_rect(16, 112 - k * 6, 208, 1, K_LINE);
-    cv_rect(16, y - 4, 208, 8, ago < 60000u && t->playing ? pic_hue : K_TEXT);
-    if (P(SECOND))
-        cv_rect(40, y2 - 3, 160, 6, ago < 60000u && t->playing ? K_SOFT : K_SAND);
-    cv_text(16, 124, &FONT_XS, "CHANT", K_DIM);
+        pic_pt(PIC_CX, PIC_CY, 58, k, 7, 1, K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 58, lo, 7, on ? pic_hue : K_LINE);
+    pic_pt(PIC_CX, PIC_CY, 58, lo, 7, on ? 6 : 4, on ? pic_hue : K_TEXT);
+    if (P(SECOND)) {
+        pic_chord(PIC_CX, PIC_CY, 58, lo, up % 7, 7, K_SOFT);
+        pic_pt(PIC_CX, PIC_CY, 58, up % 7, 7, 4, on ? K_SOFT : K_SAND);
+    }
+    pic_orb(PIC_CX, PIC_CY, 30, on ? 1000 - at * 1000 / every : 0, K_SAND, on ? pic_hue : K_SOFT);
+    pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_VOICE, K_TEXT);
 }
 #endif
 

@@ -67,20 +67,26 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the rigid pattern as two rows of sixteen cells, the root's row and the octave's, a cell
- * filled where the bass hits; the step sounding in colour */
+/* the picture: the rigid pattern as a wheel of sixteen on two rings, the root's inside and the
+ * octave's outside; a hit is a square on its ring, bigger when held long, a rest a sand dot; the step
+ * sounding in the hue at the end of the needle */
 static void F(draw)(toy_t *t)
 {
     coldwave_t *s = ST(coldwave_t);
-    int i, now = t->steps % BAR;
+    int i, now = t->steps % BAR, sz = 2 + P(HOLD);
+    pic_circle(PIC_CX, PIC_CY, 64, K_SAND);
+    pic_circle(PIC_CX, PIC_CY, 56, K_SAND);
+    pic_circle(PIC_CX, PIC_CY, 36, K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 64, now, BAR, t->playing ? pic_hue : K_LINE);
     for (i = 0; i < BAR; i++) {
-        int x = 8 + i * 14, up = i % 2 == 1 && s->jump[i] < P(JUMPS);
-        cv_rect(x, 44, 11, 28, K_PANEL);
-        cv_rect(x, 80, 11, 28, K_PANEL);
+        int up = i % 2 == 1 && s->jump[i] < P(JUMPS), r = up ? 56 : 36, cur = i == now && t->playing;
+        int a = pic_ang(i, BAR), x = pic_px(PIC_CX, r, a), y = pic_py(PIC_CY, r, a);
         if (s->on[i])
-            cv_rect(x, up ? 44 : 80, 11, 28, i == now && t->playing ? pic_hue : K_TEXT);
+            cv_rect(x - sz, y - sz, sz * 2 + 1, sz * 2 + 1, cur ? pic_hue : K_TEXT);
+        else
+            pic_pt(PIC_CX, PIC_CY, 36, i, BAR, 0, K_SAND);
     }
-    pic_bar(t->steps, BAR);
+    pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_BASS, K_TEXT);
 }
 #endif
 

@@ -63,18 +63,28 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the line as a staircase of notes, once for each voice, each a little after the last,
- * the voices stepping on top of each other; the notes sounding lit */
+/* the picture: a ring for each voice, interlocking, each the same eight-point line with its notes
+ * sitting higher or lower by their pitch; each voice's needle a little behind the last, the note it
+ * sounds in the hue; the first voice cream, the ones that follow soft */
 static void F(draw)(toy_t *t)
 {
     round_t *s = ST(round_t);
-    int v, k, now = t->steps, delay = RD_DELAY[P(DELAY)];
-    for (v = 0; v < P(VOICES); v++) {
-        int at = now - v * delay, cur = at >= 0 ? (at / 2) % BAR : -1;
+    int v, k, nv = P(VOICES), now = t->steps, delay = RD_DELAY[P(DELAY)], gap = nv > 1 ? (nv > 2 ? 44 : 60) : 0;
+    for (v = 0; v < nv; v++) {
+        int cx = PIC_CX + (2 * v - (nv - 1)) * gap / 2, cy = PIC_CY, at = now - v * delay;
+        int cur = at >= 0 && at % 2 == 0 ? (at / 2) % BAR : at >= 0 ? ((at - 1) / 2) % BAR : -1;
+        pic_circle(cx, cy, 40, K_SAND);
+        if (cur >= 0 && cur < 8 && t->playing)
+            pic_needle(cx, cy, 30, cur, 8, K_LINE);
         for (k = 0; k < 8; k++) {
-            int x = 12 + k * 26 + v * 3, y = 118 - s->line[k] * 5 - v * 4;
-            cv_rect(x, y, 20, 3, k == cur && t->playing ? pic_hue : v == 0 ? K_TEXT : K_SOFT);
+            int lit = k == cur && t->playing, r = 24 + s->line[k];
+            pic_pt(cx, cy, r, k, 8, lit ? 4 : 3, lit ? pic_hue : v == 0 ? K_TEXT : K_SOFT);
+            if (k > 0) {                        /* the line as a thread from note to note */
+                int a = pic_ang(k - 1, 8), b = pic_ang(k, 8), q = 24 + s->line[k - 1];
+                cv_line(pic_px(cx, q, a), pic_py(cy, q, a), pic_px(cx, r, b), pic_py(cy, r, b), K_LINE);
+            }
         }
+        pic_disc(cx, cy, 2, v == 0 ? K_TEXT : K_SOFT);
     }
 }
 #endif

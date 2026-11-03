@@ -88,28 +88,33 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: eight beads on a string, open hats hollow; the last beat's two beads give way to the
- * roll's cluster, tilted by the ramp, each bead lit as it sounds */
+/* the picture: the bar as a wheel of sixteen; the hats sit on every other point, open ones hollow,
+ * lit in the hue as they sound; a bar that ends in a roll packs the roll's hats into its last
+ * quarter, leaning in or out with the ramp, each lit as it is struck; the needle is the step */
 static void F(draw)(toy_t *t)
 {
     hatroll_t *s = ST(hatroll_t);
-    static const uint8_t COUNT[3] = {4, 6, 8}, BASE[3] = {3, 3, 2}, SWING[3] = {2, 2, 1};
-    int slot, y = 72;
-    pic_hline(9, 231, y, K_SAND);
-    for (slot = 0; slot < (s->rolling ? 6 : 8); slot++) {
-        int x = 24 + slot * 26;
-        pic_disc(x, y, 5, slot == s->lit ? pic_hue : K_TEXT);
+    int slot, cx = PIC_CX, cy = PIC_CY, at = t->steps % BAR;
+    pic_seal(cx, cy, 64, BAR, 0, K_SAND);
+    pic_needle(cx, cy, 44, at, BAR, K_LINE);
+    for (slot = 0; slot < 8; slot++) {
+        int i = slot * 2;
+        pic_pt(cx, cy, 58, i + 1, BAR, 0, K_SAND);
+        if (s->rolling && slot >= 6)
+            continue;
+        pic_pt(cx, cy, 50, i, BAR, 5, slot == s->lit ? pic_hue : K_TEXT);
         if (s->opens[slot])
-            pic_disc(x, y, 2, K_BG);
+            pic_pt(cx, cy, 50, i, BAR, 2, K_BG);
     }
     if (s->rolling) {
-        int n = COUNT[P(RATE)], k;
+        int n = HR_COUNT[P(RATE)], k;
         for (k = 0; k < n; k++) {
-            int lean = P(RAMP) * (2 * k - (n - 1));
-            int r = BASE[P(RATE)] + lean * SWING[P(RATE)] / (5 * (n - 1));
-            pic_disc(178 + k * 54 / n, y - lean * 3 / (n - 1), r, k < s->k ? pic_hue : K_TEXT);
+            int a = (24 + k * 8 / n + 4 / n) & 31;
+            int r = 50 + P(RAMP) * (2 * k - (n - 1)) * 2 / (n - 1);
+            pic_disc(pic_px(cx, r, a), pic_py(cy, r, a), n > 6 ? 2 : 3, k < s->k ? pic_hue : K_TEXT);
         }
     }
+    pic_rune(cx - 4, cy - 6, RUNE_HAT, K_TEXT);
 }
 #endif
 

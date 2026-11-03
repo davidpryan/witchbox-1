@@ -51,26 +51,21 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a heart trace, scrolling: a tall spike for every lub, a short one for a dub, flat where
- * it missed */
+/* the picture: the heart as an orb inside a seal of the beat's steps: it fills in the hue on every
+ * lub and drains after; a dub, or a flutter, sends a ring out from it that fades as it spreads; a
+ * needle for the step round the beat */
 static void F(draw)(toy_t *t)
 {
-    uint32_t now = plat_ms(), i;
-    int last = -1;
-    pic_hline(0, 240, 80, K_TEXT);
-    for (i = 0; i < NOTE_LOG; i++) {
-        const note_log_t *l = &note_log[i];
-        int x, h;
-        if (!l->at || l->seat != (uint8_t)t->seat || now - l->at > 6000u)
-            continue;
-        x = 232 - (int)((now - l->at) * 232u / 6000u);
-        h = l->voice == 0 ? 52 : 22;
-        cv_line(x - 4, 80, x - 1, 80 - h, now - l->at < 150u ? pic_hue : K_TEXT);
-        cv_line(x - 1, 80 - h, x + 2, 80 + h / 3, now - l->at < 150u ? pic_hue : K_TEXT);
-        cv_line(x + 2, 80 + h / 3, x + 5, 80, now - l->at < 150u ? pic_hue : K_TEXT);
-        (void)last;
-    }
-    pic_disc(232, 80, pic_ago(t, 0) < 120u ? 5 : 3, pic_hue);
+    int period = HT_PERIOD[P(PACE)], at = t->steps % period, cx = PIC_CX, cy = PIC_CY, fill, i;
+    uint32_t lub = pic_ago(t, 0), dub = pic_ago(t, 1);
+    pic_seal(cx, cy, 64, period, 0, K_SAND);
+    for (i = 0; i < period; i++)
+        pic_pt(cx, cy, 58, i, period, i == 0 ? 2 : 1, i == 0 ? K_TEXT : K_SAND);
+    pic_needle(cx, cy, 58, at, period, K_LINE);
+    fill = lub < 500u ? 1000 - (int)lub * 650 / 500 : 350;
+    pic_orb(cx, cy, 40, fill, K_TEXT, pic_hue);
+    if (dub < 600u)
+        pic_circle(cx, cy, 42 + (int)dub * 20 / 600, dub < 200u ? K_TEXT : dub < 400u ? K_SOFT : K_SAND);
 }
 #endif
 

@@ -89,23 +89,27 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: four ribbons, one a voice, dashed (shorter dashes for more Air), each brightening as its
- * voice comes in and rippling while it sings; a voice not in use is a thin line */
+/* the picture: a spire a voice in a row, each filling as its voice comes in, in the hue once it is
+ * fully in, and draining as it leaves, its fill rippling while it sings; narrower with more Air; a
+ * voice not in use a small empty outline; a voice rune under each on a ground line */
 static void F(draw)(toy_t *t)
 {
     breath_t *s = ST(breath_t);
     static const int8_t WAVE[8] = {0, 2, 3, 2, 0, -2, -3, -2};
-    int v, i, x0 = 21, seg = 25, w = seg - 1 - P(AIR) * 2;
+    int v, w = 44 - P(AIR) * 2;
     for (v = 0; v < 4; v++) {
-        int y = 18 + v * 32, lvl = s->lvl[v];
-        uint16_t c = lvl == 3 ? pic_hue : lvl == 2 ? K_TEXT : lvl == 1 ? K_SOFT : K_SAND;
+        int x = 30 + v * 60, lvl = s->lvl[v], fill = lvl * 333;
         if (v >= P(VOICES)) {
-            cv_rect(x0, y + 4, seg * 8, 2, K_SAND);
+            pic_spire(x, 110, w, 40, 0, K_SAND, K_SAND);
             continue;
         }
-        for (i = 0; i < 8; i++)
-            cv_rect(x0 + i * seg, y + (lvl ? WAVE[(i + s->phase + v * 3) % 8] : 0), w, 9, c);
+        if (lvl)
+            fill += WAVE[(s->phase + v * 3) % 8] * 20;
+        pic_spire(x, 110, w, 84, imax(0, imin(1000, fill)), K_SAND, lvl == 3 ? pic_hue : K_SOFT);
+        pic_rune(x - 4, 118, RUNE_VOICE, lvl ? K_TEXT : K_SAND);
     }
+    pic_hline(16, PW - 16, 112, K_TEXT);
+    pic_hline(16, PW - 16, 113, K_TEXT);
 }
 #endif
 

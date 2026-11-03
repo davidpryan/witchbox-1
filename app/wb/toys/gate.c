@@ -82,22 +82,35 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a row of shutters, one a step of the pattern; a tab under each step that hits; the
- * shutter the chord shows through stands open, in colour */
+/* the picture: the loop as a wheel, a point a step; the steps that hit are cream and joined into
+ * a figure by chords, the rests sand dots; the hit the chord shows through is big in the hue, the
+ * needle on the step, and an orb in the middle drains as the chop rings on */
 static void F(draw)(toy_t *t)
 {
     gate_t *s = ST(gate_t);
-    int n = imax(1, imin(32, P(COUNT))), i, w = (228 - n * 2) / n, now = t->pos % n;
-    for (i = 0; i < n; i++) {
-        int x = 6 + i * (w + 2);
-        if (i == s->open)
-            cv_rect(x, 26, w, 70, pic_hue);
+    int n = imax(1, imin(32, P(COUNT))), i, now = t->pos % n, last = -1, first = -1, cx = PIC_CX, cy = PIC_CY;
+    int full = t->step_ms * (1 + P(SMEAR)) / 4;
+    pic_circle(cx, cy, 64, K_SAND);
+    pic_circle(cx, cy, 58, K_SAND);
+    for (i = 0; i < n; i++)
+        if (s->pat[i]) {
+            if (last >= 0)
+                pic_chord(cx, cy, 50, last, i, n, K_LINE);
+            else
+                first = i;
+            last = i;
+        }
+    if (first >= 0 && last != first)
+        pic_chord(cx, cy, 50, last, first, n, K_LINE);
+    pic_needle(cx, cy, 50, now, n, t->playing ? K_SOFT : K_LINE);
+    for (i = 0; i < n; i++)
+        if (!s->pat[i])
+            pic_pt(cx, cy, 50, i, n, 0, K_SAND);
+        else if (i == s->open)
+            pic_pt(cx, cy, 50, i, n, 5, pic_hue);
         else
-            cv_rect(x, 18, w, 86, K_TEXT);
-        if (s->pat[i])
-            cv_rect(x, 110, w, 4, pic_hue);
-        pic_marker(x + w / 2, w, i == now && t->playing);
-    }
+            pic_pt(cx, cy, 50, i, n, n > 16 ? 2 : 3, K_TEXT);
+    pic_orb(cx, cy, 16, s->open >= 0 && full ? 1000 * s->ms / full : 0, K_SAND, pic_hue);
 }
 #endif
 

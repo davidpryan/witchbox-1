@@ -101,24 +101,31 @@ static void F(play_changed)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the pitch drawn as a line across the screen, column by column, wiped a little ahead of
- * the pen; the newest stretch in colour; vibrato wobbles it */
+/* the picture: the pitch as a point gliding round a seal of the fifteen notes it can rest on (the one
+ * it is on, or heading for, big in cream); where it has been as a trail that spirals in behind it,
+ * the newest in the hue; the vibrato wobbles the point on its way */
+static int F(fsin)(int a)           /* sine of an angle in 1024ths of a turn, between PIC_SIN's steps */
+{
+    int i = (a >> 5) & 31, f = a & 31;
+    return (PIC_SIN[i] * (32 - f) + PIC_SIN[(i + 1) & 31] * f) / 32;
+}
 static void F(draw)(toy_t *t)
 {
     siren_t *s = ST(siren_t);
-    int i;
-    for (i = 0; i < SI_COLS; i++) {
-        int y = s->ys[i], prev = s->ys[(i + SI_COLS - 1) % SI_COLS], top, h, age = (s->x - 1 - i + SI_COLS) % SI_COLS;
-        if (!y || age >= SI_COLS - 4)
+    int i, cx = PIC_CX, cy = PIC_CY, n = SI_HI - SI_LO + 1;
+    pic_seal(cx, cy, 64, n, 0, K_SAND);
+    for (i = 0; i < n; i++)
+        pic_pt(cx, cy, 58, i, n, i + SI_LO == s->b ? 3 : 1, i + SI_LO == s->b ? K_TEXT : K_SAND);
+    for (i = SI_COLS - 5; i >= 0; i--) {        /* oldest first, so the newest lies on top */
+        int y = s->ys[(s->x - 1 - i + SI_COLS) % SI_COLS], p8 = 128 - y;    /* 8ths of a note above SI_LO */
+        int a = (p8 * 1024 / (8 * n)) & 1023, r = 50 - i / 3;
+        int x = cx + r * F(fsin)(a) / 100, yy = cy - r * F(fsin)((a + 256) & 1023) / 100;
+        if (!y)
             continue;
-        if (prev && age < SI_COLS - 5) {
-            top = imin(y, prev);
-            h = iabs(y - prev) + 2;
-        } else {
-            top = y;
-            h = 2;
-        }
-        cv_rect(i * 2, top, 2, h, age < 14 ? pic_hue : K_TEXT);
+        if (i < 14)
+            pic_disc(x, yy, i == 0 ? 3 : 2, pic_hue);
+        else
+            cv_rect(x, yy, 2, 2, i < 50 ? K_SOFT : K_SAND);
     }
 }
 #endif

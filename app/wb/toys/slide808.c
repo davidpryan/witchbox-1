@@ -114,20 +114,34 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the bass as a trace across the bar: level where a note holds, a slope where it glides,
- * nothing in the silences; the newest note in colour */
+/* the picture: the bar's trace wound round a seal: the bass's pitch is the radius, level where a
+ * note holds, a slope where it glides, nothing in the silences; the newest note in the hue and the
+ * pen a disc on the end of it */
+static int F(sx)(int cx, int r, int a)   /* a point at an angle in 256ths of a turn */
+{
+    int lo = (a >> 3) & 31, hi = (lo + 1) & 31, f = a & 7;
+    return cx + r * (PIC_SIN[lo] * 8 + (PIC_SIN[hi] - PIC_SIN[lo]) * f) / 800;
+}
 static void F(draw)(toy_t *t)
 {
     slide808_t *s = ST(slide808_t);
-    int i, x0 = s->px;
-    pic_hline(0, 240, 128, K_LINE);
+    int i, x0 = s->px, cx = PIC_CX, cy = PIC_CY;
+    pic_circle(cx, cy, 64, K_SAND);
+    pic_circle(cx, cy, 20, K_SAND);
+    pic_pt(cx, cy, 64, 0, 1, 2, K_SOFT);
     for (i = 0; i < 240; i++) {
-        int y = s->trace[i];
-        if (y)
-            cv_rect(i, y - 1, 1, 3, i == x0 || (x0 - i + 240) % 240 < s->nn ? pic_hue : K_TEXT);
+        int y = s->trace[i], a = i * 256 / 240, r;
+        if (!y)
+            continue;
+        r = 22 + (y - 30) * 36 / 70;
+        cv_rect(F(sx)(cx, r, a) - 1, F(sx)(cy, -r, a + 64) - 1, 3, 3,
+                i == x0 || (x0 - i + 240) % 240 < s->nn ? pic_hue : K_TEXT);
     }
-    if (s->y)
-        cv_rect(x0 - 1, s->y - 3, 3, 7, pic_hue);
+    if (s->y) {
+        int a = x0 * 256 / 240, r = 22 + (s->y - 30) * 36 / 70;
+        pic_disc(F(sx)(cx, r, a), F(sx)(cy, -r, a + 64), 4, pic_hue);
+    }
+    pic_rune(cx - 4, cy - 6, RUNE_BASS, s->ring ? K_TEXT : K_SAND);
 }
 #endif
 

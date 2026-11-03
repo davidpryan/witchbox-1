@@ -82,22 +82,30 @@ static void F(play_changed)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: each stab as a stack of bars, one a note of the chord's shape, at the riff's height;
- * wider the longer it is held; the one sounding in colour; a step marker underneath */
+/* the picture: the bar as a seal of sixteen points, a stab a big point, pushed further out the more
+ * it is lifted and bigger the longer it is held, in the hue while it sounds; at the centre the
+ * chord's shape as a small seal of its notes, joined, in the hue with the stab; a needle for the step */
 static void F(draw)(toy_t *t)
 {
     rave_t *s = ST(rave_t);
-    static const int8_t SHAPES[3][4] = {{0, 2, 4, -1}, {0, 2, 4, 6}, {0, 3, 4, -1}};
-    static const int8_t LIFT[16] = {0, 0, 0, 2, 0, 0, 2, 4, 0, 0, 0, 2, 0, 4, 2, -1};
-    int st, k, w = 4 + P(HOLD) * 3 / 4;
+    int st, k, cx = PIC_CX, cy = PIC_CY, n = 0, size = 3 + P(HOLD) / 4;
+    pic_seal(cx, cy, 64, BAR, 0, K_SAND);
+    if (s->tick >= 0)
+        pic_needle(cx, cy, 44, s->tick, BAR, K_LINE);
     for (st = 0; st < BAR; st++) {
-        int x = 8 + st * 14;
-        if (s->stab[st]) {
-            int y = 110 - (s->root + LIFT[st]) * 7;
-            for (k = 0; k < 4 && SHAPES[P(SHAPE)][k] >= 0; k++)
-                cv_rect(x, y - SHAPES[P(SHAPE)][k] * 6, w, 4, st == s->hot ? pic_hue : K_TEXT);
-        }
-        cv_rect(x, 132, 12, 3, st == s->tick ? pic_hue : st % 4 == 0 ? K_SOFT : K_SAND);
+        if (s->stab[st])
+            pic_pt(cx, cy, 48 + RV_LIFT[st] * 2, st, BAR, size, st == s->hot ? pic_hue : K_TEXT);
+        else
+            pic_pt(cx, cy, 48, st, BAR, 0, K_SAND);
+    }
+    pic_circle(cx, cy, 24, K_SAND);
+    for (k = 0; k < 4 && RV_SHAPES[P(SHAPE)][k] != NONE; k++)
+        n++;
+    for (k = 0; k < n; k++) {
+        int d = RV_SHAPES[P(SHAPE)][k], e = RV_SHAPES[P(SHAPE)][(k + 1) % n];
+        uint16_t c = s->hot >= 0 ? pic_hue : K_SOFT;
+        pic_chord(cx, cy, 18, d, e, 7, c);
+        pic_pt(cx, cy, 18, d, 7, 2, c);
     }
 }
 #endif

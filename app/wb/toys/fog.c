@@ -60,22 +60,21 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: fog as drifting bands that thicken as the band goes duller and thin as it brightens;
- * the tone as a bar */
+/* the picture: the band's brightness as an orb, full when the fog has lifted and shrunk to a point
+ * when it is in; as the fog thickens rings close in round it, and a ring of points drifts slowly round
+ * the rim like the fog rolling */
 static void F(draw)(toy_t *t)
 {
-    uint32_t now = plat_ms(), i;
-    int thick = 100 - S.tone, n = 4 + thick / 8;
+    uint32_t now = plat_ms();
+    int thick = 100 - S.tone, i, n = thick / 20, rot = (int)(now / 120u);
     (void)t;
-    for (i = 0; i < (uint32_t)n; i++) {
-        uint32_t h = pic_hash(i, 7);
-        int y = 10 + (int)(h % 110u), w = 40 + (int)(h % 120u), x = (int)((h / 110u + now / (8u + i)) % 300u) - 60;
-        cv_rect(x, y, w, 3 + thick / 30, thick > 60 ? K_SOFT : K_SAND);
-    }
-    cv_rect(20, 130, 200, 3, K_PANEL);
-    cv_rect(20, 130, S.tone * 2, 3, pic_hue);
-    cv_text(20, 118, &FONT_XS, "DULL", K_DIM);
-    cv_text(190, 118, &FONT_XS, "BRIGHT", K_DIM);
+    pic_circle(PIC_CX, PIC_CY, 64, K_SAND);
+    for (i = 0; i < 16; i++)
+        pic_pt(PIC_CX, PIC_CY, 60, i * 2 + ((rot + i) & 1) + rot, 32, i & 1 ? 1 : 0, thick > 50 ? K_SOFT : K_SAND);
+    for (i = 0; i < n; i++)
+        pic_circle(PIC_CX, PIC_CY, 52 - i * 7, K_SAND);
+    pic_orb(PIC_CX, PIC_CY, 44, 60 + S.tone * 9, K_SOFT, thick > 60 ? K_SAND : pic_hue);
+    pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_EYE, thick > 60 ? K_SOFT : K_BG);
 }
 #endif
 

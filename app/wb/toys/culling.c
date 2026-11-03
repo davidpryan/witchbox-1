@@ -62,21 +62,33 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a bar for each seat, white while it plays and dark for the phrase it is cut; the phrase
- * as a line that runs out to the next draw */
+/* the picture: the band as orbs round a seal, one a seat: full and cream while it plays, empty with
+ * the cross in the hue for the phrase it is cut, sand where no one sits; the needle sweeps the
+ * phrase round to the next draw of lots */
 static void F(draw)(toy_t *t)
 {
-    int i, n = S.band ? SEATS : 4, period = CU_EVERY[P(EVERY)], at = toy_now(t) % period;
+    int i, n = S.band ? SEATS : 4, period = CU_EVERY[P(EVERY)], at = toy_now(t) % period, cx = PIC_CX, cy = PIC_CY;
+    uint32_t now = plat_ms();
+    pic_seal(cx, cy, 64, n, 1, K_SAND);
+    pic_needle(cx, cy, 34, at * 32 / period, 32, t->playing ? pic_hue : K_LINE);
     for (i = 0; i < n; i++) {
-        int x = pic_col(i, n, 9), w = n > 4 ? 20 : 33, role = S.band ? S.roles[i] : ROLE_NONE;
-        uint16_t c = S.cuts[i] ? K_PANEL : role != ROLE_NONE || !S.band ? K_TEXT : K_SAND;
-        cv_rect(x - w / 2, 16, w, 90, c);
-        if (S.cuts[i])
-            cv_line(x - w / 2, 16, x + w / 2, 106, pic_hue), cv_line(x + w / 2, 16, x - w / 2, 106, pic_hue);
+        int a = pic_ang(i, n), x = pic_px(cx, 46, a), y = pic_py(cy, 46, a), role = S.band ? S.roles[i] : ROLE_NONE;
+        int seated = !S.band || (role != ROLE_NONE && role != ROLE_CONDUCTOR), me = S.band && i == t->seat;
+        int hot = 0;
+        uint32_t j;
+        for (j = 0; j < NOTE_LOG; j++)          /* did this seat just sound? */
+            if (note_log[j].at && note_log[j].seat == (uint8_t)i && now - note_log[j].at < 150u)
+                hot = 1;
+        pic_disc(x, y, 11, K_BG);
+        if (S.cuts[i]) {
+            pic_orb(x, y, 9, 0, K_SOFT, K_SOFT);
+            pic_rune(x - 4, y - 6, RUNE_CROSS, pic_hue);
+        } else if (me)
+            pic_orb(x, y, 9, 1000, K_SOFT, K_SOFT);
+        else
+            pic_orb(x, y, 9, seated ? 1000 : 0, K_SAND, hot ? K_TEXT : K_SOFT);
     }
-    cv_rect(12, 124, 216, 3, K_PANEL);
-    cv_rect(12, 124, (period - at) * 216 / period, 3, pic_hue);
-    (void)t;
+    pic_disc(cx, cy, 3, K_TEXT);
 }
 #endif
 

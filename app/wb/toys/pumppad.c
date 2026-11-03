@@ -70,26 +70,18 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a blob that squashes flat on every kick and swells back, round-cornered, in colour while
- * it is ducked */
+/* the picture: the chord as a polygon on the seal, a point a note, wider with Spread; an orb in
+ * the middle that is the level: it ducks to a small disc on every kick and swells back to fill
+ * its ring, in the hue while it is ducked */
 static void F(draw)(toy_t *t)
 {
     pumppad_t *s = ST(pumppad_t);
-    int w = 72 + P(SPREAD) * 15, h = (18 + 75 * s->lvl / 1000) & ~3, r = 9, cx = 120, cy = 72, y;
+    int cx = PIC_CX, cy = PIC_CY, n = 3 + P(COLOUR), r = 26 + P(SPREAD) * 2, k;
     uint16_t c = s->lvl < 1000 ? pic_hue : K_TEXT;
-    if (h < 2 * r)
-        r = h / 2;
-    cv_rect(cx - w / 2, cy - h / 2, w, h, c);
-    /* the corners, cut back to round */
-    for (y = 0; y < r; y++) {
-        int dy = r - y, dx = r;
-        while (dx > 0 && dx * dx + dy * dy > r * r)
-            dx--;
-        cv_rect(cx - w / 2, cy - h / 2 + y, r - dx, 1, K_BG);
-        cv_rect(cx + w / 2 - (r - dx), cy - h / 2 + y, r - dx, 1, K_BG);
-        cv_rect(cx - w / 2, cy + h / 2 - 1 - y, r - dx, 1, K_BG);
-        cv_rect(cx + w / 2 - (r - dx), cy + h / 2 - 1 - y, r - dx, 1, K_BG);
-    }
+    pic_seal(cx, cy, 64, n, 1, K_SAND);
+    for (k = 0; k < n; k++)
+        pic_pt(cx, cy, 58, k, n, 3, pic_ago(t, k) < 300u ? pic_hue : K_TEXT);
+    pic_orb(cx, cy, r, s->lvl, K_SOFT, c);
 }
 #endif
 

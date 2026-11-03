@@ -54,25 +54,29 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: chimes hung from a bar, longer for lower notes, each swinging when struck; the gust as
- * a breath of lines across them */
+/* the picture: a spire for each chime hung on the frame, taller for the lower notes, each filling
+ * in the hue when struck and draining as it rings down; the gust as an orb above them that empties
+ * as the wind drops, with the wave rune over it while it blows */
 static void F(draw)(toy_t *t)
 {
     chimes_t *s = ST(chimes_t);
     int8_t tones[12];
-    int root = toy_root(t, 0) + P(HIGH) * 7 / 10, n = tune_tones(root, root, root + 9, tones), i;
-    if (n > P(CHIMES)) n = P(CHIMES);
-    cv_rect(40, 10, 160, 3, K_TEXT);
+    int root = toy_root(t, 0) + P(HIGH) * 7 / 10, n = tune_tones(root, root, root + 9, tones), i, w;
+    if (n > P(CHIMES))
+        n = P(CHIMES);
+    if (n < 1)
+        n = 1;
+    w = 200 / n;
     for (i = 0; i < n; i++) {
-        int x = pic_col(i, n, 50), len = 60 + (9 - (tones[i] - root)) * 5;
+        int x = 20 + i * w + w / 2, h = 50 + (9 - (tones[i] - root)) * 4;
         uint32_t ago = pic_ago_deg(t, tones[i]);
-        int sw = ago < 800u ? PIC_SIN[(ago / 25u) & 31] * (int)(800u - ago) / 100 / 160 : 0;
-        cv_rect(x, 13, 1, 8, K_SOFT);
-        cv_rect(x - 3 + sw, 21, 6, len, ago < 150u ? pic_hue : K_TEXT);
+        int fill = ago < 900u ? (int)((900u - ago) * 1000u / 900u) : 0;
+        pic_spire(x, 126, w - 8, h, fill, ago < 150u ? pic_hue : K_SAND, pic_hue);
     }
+    pic_hline(12, PW - 12, 128, K_TEXT);
+    pic_orb(PIC_CX, 20, 12, s->gust > 0 ? s->strength * 10 : 0, K_SAND, K_SOFT);
     if (s->gust > 0)
-        for (i = 0; i < 4; i++)
-            cv_rect(10 + i * 8 + (int)((plat_ms() / 10u) % 200u), 30 + i * 22, 24, 1, K_SOFT);
+        pic_rune(PIC_CX - 4, 14, RUNE_WAVE, K_TEXT);
 }
 #endif
 

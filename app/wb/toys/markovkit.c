@@ -74,26 +74,32 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the six drums as a ring of nodes, the chains between them as lines, heavier where the
- * chance is higher; the drum just struck lit, the line it came along in colour */
+/* the picture: the six drums as runes round a seal, the chain's likelier roads as chords between
+ * them, those out of the drum just struck in the hue; that drum sits on a disc that swells as it
+ * sounds; a rest is the rune at the centre */
 static void F(draw)(toy_t *t)
 {
     markovkit_t *s = ST(markovkit_t);
-    static const char *const NAME[6] = {"K", "S", "H", "O", "R", "T"};
-    int a, b, cx = 120, cy = 72;
+    static const uint8_t RUNE[MK_N] = {RUNE_KICK, RUNE_SNARE, RUNE_HAT, RUNE_PERC, RUNE_CROSS, RUNE_DOWN};
+    int a, b, cx = PIC_CX, cy = PIC_CY, hot = pic_ago(t, -1) < 150u;
+    pic_seal(cx, cy, 64, MK_N, 0, K_SAND);
     for (a = 0; a < MK_N; a++)
-        for (b = 0; b < MK_N; b++) {
-            int w = s->table[a][b];
-            if (a != b && w >= 6)
-                cv_line(cx + 50 * PIC_SIN[(a * 32 / 6) & 31] / 100, cy - 50 * PIC_SIN[(a * 32 / 6 + 8) & 31] / 100,
-                        cx + 50 * PIC_SIN[(b * 32 / 6) & 31] / 100, cy - 50 * PIC_SIN[(b * 32 / 6 + 8) & 31] / 100,
-                        a == s->last ? pic_hue : K_LINE);
-        }
+        for (b = 0; b < MK_N; b++)
+            if (a != b && s->table[a][b] >= 6 && a != s->last)
+                pic_chord(cx, cy, 46, a, b, MK_N, K_LINE);
+    if (s->last < MK_N)
+        for (b = 0; b < MK_N; b++)
+            if (b != s->last && s->table[s->last][b] >= 5)
+                pic_chord(cx, cy, 46, s->last, b, MK_N, pic_hue);
     for (a = 0; a < MK_N; a++) {
-        int x = cx + 50 * PIC_SIN[(a * 32 / 6) & 31] / 100, y = cy - 50 * PIC_SIN[(a * 32 / 6 + 8) & 31] / 100;
-        pic_disc(x, y, a == s->last ? 9 : 7, a == s->last ? pic_hue : K_TEXT);
-        cv_text(x - 3, y - 7, &FONT_XS, NAME[a], K_BG);
+        int on = a == s->last;
+        pic_pt(cx, cy, 46, a, MK_N, on ? (hot ? 11 : 9) : 8, on ? pic_hue : K_PANEL);
+        pic_rune_at(cx, cy, 46, a, MK_N, RUNE[a], on ? K_BG : K_TEXT);
     }
+    if (s->last == MK_N)
+        pic_rune(cx - 4, cy - 6, RUNE_REST, pic_hue);
+    else
+        pic_disc(cx, cy, 2, K_SAND);
 }
 #endif
 

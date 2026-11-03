@@ -51,22 +51,27 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a bell that swings when it is struck, with rings spreading from it while it sounds */
+/* the picture: the bell as an orb that fills at the strike and drains as it rings out, rings spreading
+ * from it through the seal; the chord's degrees round the rim with the one tolled in the hue, and the
+ * strikes left as dots beneath (the ringing timed by the clock, the flash by the strike) */
 static void F(draw)(toy_t *t)
 {
-    uint32_t ago = pic_ago(t, 0);
-    int swing = ago < 1200u ? PIC_SIN[(ago / 40u) & 31] * (int)(1200u - ago) / 100 / 120 : 0, cx = 120 + swing, i;
-    if (ago < 3000u)
+    toll_t *s = ST(toll_t);
+    uint32_t ago = pic_ago(t, 0), since = t->playing ? (uint32_t)((toy_now(t) % TL_EVERY[P(EVERY)]) * t->step_ms) : 100000u;
+    int i, deg = imax(0, imin(7, s->deg - (toy_root(t, 0) - 7))), fill = since < 3000u ? (int)(3000u - since) / 3 : 0;
+    pic_circle(PIC_CX, PIC_CY, 64, K_SAND);
+    if (since < 3000u)
         for (i = 0; i < 3; i++) {
-            int r = 36 + (int)(ago / 25u) + i * 14;
-            if (r < 120)
-                pic_ring(120, 76, r, r - 2, i == 0 ? K_SOFT : K_SAND);
+            int r = 26 + (int)(since / 30u) + i * 12;
+            if (r < 62)
+                pic_circle(PIC_CX, PIC_CY, r, i == 0 ? K_SOFT : K_SAND);
         }
-    cv_rect(118, 14, 4, 10, K_SOFT);
-    for (i = 0; i < 44; i++)
-        cv_rect(cx - 8 - i * i / 60, 24 + i, 16 + i * i / 30, 1, ago < 120u ? pic_hue : K_TEXT);
-    cv_rect(cx - 30, 68, 60, 5, ago < 120u ? pic_hue : K_TEXT);
-    pic_disc(cx, 80, 5, K_SOFT);
+    pic_orb(PIC_CX, PIC_CY, 24, fill, K_TEXT, ago < 150u ? K_TEXT : pic_hue);
+    for (i = 0; i < 8; i++)
+        pic_pt(PIC_CX, PIC_CY, 58, i, 8, i == deg ? 5 : i == 0 || i == 4 || i == 7 ? 2 : 1, i == deg ? pic_hue : K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 30, deg, 8, since < 3000u ? K_SOFT : K_LINE);
+    for (i = 0; i < P(STRIKES); i++)
+        pic_disc(PIC_CX - (P(STRIKES) - 1) * 4 + i * 8, 134, 2, i >= P(STRIKES) - (s->left + 1) / 2 ? pic_hue : K_SAND);
 }
 #endif
 

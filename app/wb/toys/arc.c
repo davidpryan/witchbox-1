@@ -116,25 +116,45 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the song's line, intro to outro, with a dot where the song is now; the sections named
- * under it; each seat's level as a bar at the right */
+/* the picture: the song's shape as the seal itself: a ring whose radius swells and shrinks with the
+ * line, intro to outro round the clock, six section ticks on the outer ring; a needle to where the
+ * song is now, a point in the hue there; each seat's level as a point on the rim, bigger the louder */
+static int F(fsin)(int a)           /* sine of an angle in 1024ths of a turn, between PIC_SIN's steps */
+{
+    int i = (a >> 5) & 31, f = a & 31;
+    return (PIC_SIN[i] * (32 - f) + PIC_SIN[(i + 1) & 31] * f) / 32;
+}
+static int F(rad)(const arc_t *s, int x) { return 20 + (AR_YLO - s->ys[x]) * 36 / (AR_YLO - AR_YHI); }
 static void F(draw)(toy_t *t)
 {
     arc_t *s = ST(arc_t);
-    static const char *const NAMES[6] = {"INT", "BLD", "DRP", "BRK", "DRP", "OUT"};
-    int x, gw = 180, i, where = F(where)(t), n = S.band ? SEATS : 4;
-    for (x = 0; x < gw; x++) {
-        int y = (s->ys[x * AR_GW / gw] - 26) * 3 / 4, y2 = (s->ys[imin(AR_GW, (x + 1) * AR_GW / gw)] - 26) * 3 / 4;
-        cv_rect(6 + x, imin(y, y2), 1, iabs(y2 - y) + 2, K_TEXT);
+    int i, cx = PIC_CX, cy = PIC_CY, where = F(where)(t), n = S.band ? SEATS : 4, px = 0, py = 0, a, r;
+    pic_circle(cx, cy, 64, K_SAND);
+    for (i = 0; i < 6; i++) {
+        a = pic_ang(i, 6);
+        cv_line(pic_px(cx, 58, a), pic_py(cy, 58, a), pic_px(cx, 64, a), pic_py(cy, 64, a), K_SOFT);
     }
-    for (i = 0; i < 6; i++)
-        cv_text(6 + i * 30 + 6, 128, &FONT_XS, NAMES[i], K_SOFT);
-    pic_disc(6 + where * gw / AR_GW, (s->ys[where] - 26) * 3 / 4, 3, pic_hue);
-    for (i = 0; i < n; i++) {
-        int v = S.levels[i], h = v * 96 / 100, bx = 196 + i * (n > 4 ? 5 : 10), bw = n > 4 ? 4 : 7;
-        cv_rect(bx, 16, bw, 96 - h, K_SAND);
-        cv_rect(bx, 16 + 96 - h, bw, h, K_TEXT);
+    for (i = 0; i <= 64; i++) {
+        int qx, qy;
+        r = F(rad)(s, imin(AR_GW, i * AR_GW / 64));
+        a = (i * 16) & 1023;
+        qx = cx + r * F(fsin)(a) / 100;
+        qy = cy - r * F(fsin)((a + 256) & 1023) / 100;
+        if (i) {
+            cv_line(px, py, qx, qy, K_TEXT);
+            cv_line(px, py + 1, qx, qy + 1, K_TEXT);
+        }
+        px = qx;
+        py = qy;
     }
+    a = (where * 1024 / AR_GW) & 1023;
+    r = F(rad)(s, where);
+    px = cx + r * F(fsin)(a) / 100;
+    py = cy - r * F(fsin)((a + 256) & 1023) / 100;
+    cv_line(cx, cy, px, py, K_LINE);
+    pic_disc(px, py, 3, pic_hue);
+    for (i = 0; i < n; i++)
+        pic_pt(cx, cy, 64, i, n, 1 + S.levels[i] * 2 / 100, S.levels[i] >= 100 ? K_TEXT : K_SOFT);
 }
 #endif
 

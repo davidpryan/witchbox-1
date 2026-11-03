@@ -68,25 +68,28 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the figure as a row of bones, one a note, at its height above or below the root; the
- * one being struck lit (and its strokes counted); then a bar of silence that empties */
+/* the picture: the figure as a seal of three, five or seven points, each note out from the centre by
+ * its height from the root and joined to the next by a chord; the note struck is the needle's, in the
+ * hue, its strokes counted as dots beneath, and the orb at the centre drains through the silence */
 static void F(draw)(toy_t *t)
 {
     rattle_t *s = ST(rattle_t);
     static const uint8_t LEN[3] = {3, 5, 7};
-    int n = LEN[P(FIGURE)], i, k;
+    int n = LEN[P(FIGURE)], i, k, rest_of = imax(1, P(REST) * 2 + 2);
+    pic_seal(PIC_CX, PIC_CY, 64, n, 0, K_SAND);
     for (i = 0; i < n; i++) {
-        int x = pic_col(i, n, 30), y = 72 - s->fig[i] * 7, cur = i == s->at && s->rest == 0 && t->playing;
-        uint16_t c = cur ? pic_hue : K_TEXT;
-        cv_rect(x - 10, y - 2, 20, 4, c);
-        pic_disc(x - 10, y - 3, 3, c); pic_disc(x - 10, y + 3, 3, c);
-        pic_disc(x + 10, y - 3, 3, c); pic_disc(x + 10, y + 3, 3, c);
-        if (cur)
-            for (k = 0; k < P(STROKES); k++)
-                cv_rect(x - 8 + k * 5, y + 12, 3, 3, k < P(STROKES) - s->left ? pic_hue : K_SAND);
+        int a = pic_ang(i, n), b = pic_ang(i + 1, n), r0 = 38 + s->fig[i] * 3, r1 = 38 + s->fig[(i + 1) % n] * 3;
+        cv_line(pic_px(PIC_CX, r0, a), pic_py(PIC_CY, r0, a), pic_px(PIC_CX, r1, b), pic_py(PIC_CY, r1, b), K_LINE);
     }
-    if (s->rest > 0)
-        cv_rect(20, 128, s->rest * 200 / imax(1, P(REST) * 2 + 2), 3, K_SAND);
+    if (s->rest == 0 && t->playing)
+        pic_needle(PIC_CX, PIC_CY, 38 + s->fig[s->at] * 3, s->at, n, pic_hue);
+    for (i = 0; i < n; i++) {
+        int cur = i == s->at && s->rest == 0 && t->playing;
+        pic_pt(PIC_CX, PIC_CY, 38 + s->fig[i] * 3, i, n, cur ? 6 : 4, cur ? pic_hue : K_TEXT);
+    }
+    pic_orb(PIC_CX, PIC_CY, 12, s->rest * 1000 / rest_of, s->rest ? K_TEXT : K_SAND, K_SOFT);
+    for (k = 0; k < P(STROKES); k++)
+        pic_disc(PIC_CX - (P(STROKES) - 1) * 4 + k * 8, 132, 2, s->rest == 0 && k < P(STROKES) - s->left ? pic_hue : K_SAND);
 }
 #endif
 

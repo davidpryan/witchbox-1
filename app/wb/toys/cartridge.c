@@ -70,20 +70,30 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the tune as a row of pixels, one a note; where it sticks the same pixel repeats in
- * colour; a wrong leap jumps the pixel out of line */
+/* the picture: the tune as a wheel of sixteen or thirty-two points, each out from the centre by its
+ * height and joined to the next by a chord, so the tune is a jagged seal; the needle is the playhead;
+ * where it sticks the hold rune burns in the hue at the centre and the stuck note's ring glows */
 static void F(draw)(toy_t *t)
 {
     cartridge_t *s = ST(cartridge_t);
     static const uint8_t EVERY[2] = {2, 1}, LEN[2] = {16, 32};
-    int len = LEN[P(LENGTH)], i, now = (t->steps / EVERY[P(SPEED)]) % len, w = 224 / len;
+    int len = LEN[P(LENGTH)], i, now = (t->steps / EVERY[P(SPEED)]) % len;
+    pic_seal(PIC_CX, PIC_CY, 64, len, 0, K_SAND);
     for (i = 0; i < len; i++) {
-        int y = 120 - s->tune[i] * 7, cur = i == now && t->playing;
-        cv_rect(8 + i * w, y, w - 1, 6, cur ? (s->stuck ? pic_hue : K_TEXT) : K_SOFT);
-        if (cur && s->stuck)
-            cv_rect(8 + i * w, 120 - s->stuck_deg * 7 + toy_root(t, 0) * 7, w - 1, 6, pic_hue);
+        int a = pic_ang(i, len), b = pic_ang(i + 1, len), r0 = 22 + s->tune[i] * 2, r1 = 22 + s->tune[(i + 1) % len] * 2;
+        cv_line(pic_px(PIC_CX, r0, a), pic_py(PIC_CY, r0, a), pic_px(PIC_CX, r1, b), pic_py(PIC_CY, r1, b), K_LINE);
     }
-    cv_rect(8 + now * w, 8, w - 1, 3, t->playing ? pic_hue : K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 58, now, len, t->playing ? pic_hue : K_LINE);
+    for (i = 0; i < len; i++) {
+        int cur = i == now && t->playing;
+        pic_pt(PIC_CX, PIC_CY, 22 + s->tune[i] * 2, i, len, cur ? 4 : i % 4 == 0 ? 3 : 2, cur ? pic_hue : K_TEXT);
+    }
+    if (s->stuck && t->playing) {
+        int r = 22 + imax(2, imin(14, s->stuck_deg - toy_root(t, 0))) * 2;
+        pic_circle(PIC_CX, PIC_CY, r, pic_hue);
+        pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_HOLD, pic_hue);
+    } else
+        pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_LEAD, K_SOFT);
 }
 #endif
 

@@ -96,22 +96,36 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the roll's hits as a row of bars, closer together as it speeds up, each lit as it
- * sounds; two squares for the backbeat; a strip that flashes on the downbeat */
+/* the picture: the bar as a seal of sixteen points, the backbeat's two as snare runes; the roll's
+ * hits as ticks crowding closer round the rim as it speeds up, the one sounding in the hue and
+ * those gone soft; a needle for the step; both rings flare in the hue when the crash lands */
+static int F(fsin)(int a)           /* sine of an angle in 1024ths of a turn, between PIC_SIN's steps */
+{
+    int i = (a >> 5) & 31, f = a & 31;
+    return (PIC_SIN[i] * (32 - f) + PIC_SIN[(i + 1) & 31] * f) / 32;
+}
 static void F(draw)(toy_t *t)
 {
     rush_t *s = ST(rush_t);
     const uint16_t *hits = RU_PLAN[P(SPAN) - 1][P(ACCEL)];
-    int k, n;
-    cv_rect(0, 8, 240, 4, s->strip > 0 ? pic_hue : K_BG);
-    cv_rect(0, 132, 240, 4, s->strip > 0 ? pic_hue : K_BG);
+    int k, n, cx = PIC_CX, cy = PIC_CY, at = t->steps % BAR, begin = BAR - 4 * P(SPAN);
+    pic_seal(cx, cy, 64, BAR, 0, s->strip > 0 ? pic_hue : K_SAND);
+    pic_needle(cx, cy, 40, at, BAR, K_LINE);
+    for (k = 0; k < BAR; k++)
+        pic_pt(cx, cy, 58, k, BAR, k % 4 == 0 ? 2 : 0, K_SAND);
     for (k = 0; k < 72 && hits[k] != 65535; k++) {
-        int x = 12 + hits[k] * 216 / (P(SPAN) * 4000);
-        cv_rect(x, 40, 2, 60, k == s->hot ? pic_hue : K_TEXT);
+        int a = (begin * 64 + hits[k] * 64 / 1000) & 1023;     /* step begin + hits[k] / 1000, in 1024ths */
+        int sx = F(fsin)(a), sy = F(fsin)((a + 256) & 1023), r0 = k == s->hot ? 30 : 38, r1 = 52;
+        uint16_t c = k == s->hot ? pic_hue : k < s->hot ? K_SOFT : K_TEXT;
+        cv_line(cx + r0 * sx / 100, cy - r0 * sy / 100, cx + r1 * sx / 100, cy - r1 * sy / 100, c);
+        cv_line(cx + r0 * sx / 100 + 1, cy - r0 * sy / 100, cx + r1 * sx / 100 + 1, cy - r1 * sy / 100, c);
+        if (k == s->hot)
+            pic_disc(cx + 54 * sx / 100, cy - 54 * sy / 100, 3, pic_hue);
     }
     for (n = 0; n < 2; n++)
         if (P(BACK))
-            cv_rect(60 + n * 108, 110, 9, 9, n == s->beat ? pic_hue : K_SAND);
+            pic_rune_at(cx, cy, 24, 4 + n * 8, BAR, RUNE_SNARE, n == s->beat ? pic_hue : K_SOFT);
+    pic_disc(cx, cy, 3, K_TEXT);
 }
 #endif
 

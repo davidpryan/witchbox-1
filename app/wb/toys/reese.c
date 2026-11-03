@@ -63,19 +63,26 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: two lines, the same curve one way up and the other, crossing as they drift apart
- * with Detune; in colour while a note sounds */
+/* the picture: two rings the same size that drift apart and back through each other as the two
+ * notes beat, further with Detune, in the hue while a note sounds; the phrase's starts as points
+ * on the outer seal, the needle on the step, a darker eye in the middle the duller the tone */
 static void F(draw)(toy_t *t)
 {
     reese_t *s = ST(reese_t);
-    static const int8_t SIN[16] = {0, 24, 45, 59, 64, 59, 45, 24, 0, -24, -45, -59, -64, -59, -45, -24};
-    int i, k, amp = 33 - P(DARK) * 2, ph = s->ph / 50;
-    uint16_t c = s->on && t->playing ? pic_hue : K_TEXT;
-    for (k = 0; k < 2; k++)
-        for (i = 0; i < 32; i++) {
-            int a = k ? -amp : amp, y = 72 + a * SIN[((i * 3 + ph) / 4) & 15] / 64;
-            cv_rect(i * 8 - 1, y - 2, 8, 4, c);
-        }
+    static const uint16_t starts[3] = {0x1, 0x101, 0x1041};
+    int cx = PIC_CX, cy = PIC_CY, ph = (s->ph / 50) & 31, d = (4 + P(DETUNE) * 2) * PIC_SIN[ph] / 100, i;
+    int on = s->on && t->playing;
+    uint16_t c = on ? pic_hue : K_TEXT;
+    pic_circle(cx, cy, 64, K_SAND);
+    pic_needle(cx, cy, 60, t->steps % BAR, BAR, K_LINE);
+    for (i = 0; i < BAR; i++)
+        if (starts[P(PHRASE) - 1] & (1u << i))
+            pic_pt(cx, cy, 60, i, BAR, 3, pic_ago(t, 0) < 150u ? pic_hue : K_SOFT);
+    pic_circle(cx - d, cy, 38, c);
+    pic_circle(cx + d, cy, 38, c);
+    pic_circle(cx - d, cy, 37, c);
+    pic_circle(cx + d, cy, 37, c);
+    pic_disc(cx, cy, 2 + (10 - P(DARK)) / 2, on ? K_TEXT : K_SOFT);
 }
 #endif
 

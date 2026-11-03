@@ -62,23 +62,26 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: six strings down the screen; the hand's place on them; a string plucked trembles
+/* the picture: the six strings as the six points of a hexagram seal, the ones the chord uses in
+ * cream and the rest sand; the hand is the needle, and a string plucked swells in the hue and shivers
  * for a moment */
 static void F(draw)(toy_t *t)
 {
     graveyard_t *s = ST(graveyard_t);
     int8_t tones[16];
-    int root = toy_root(t, 0) - 7, n = tune_tones(root, root, root + 4 + P(SPREAD), tones), i, j;
+    int root = toy_root(t, 0) - 7, n = tune_tones(root, root, root + 4 + P(SPREAD), tones), i;
     if (n > 6) n = 6;
+    pic_seal(PIC_CX, PIC_CY, 64, 6, 2, K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 58, s->at % imax(1, n), 6, t->playing ? K_SOFT : K_LINE);
     for (i = 0; i < 6; i++) {
-        int x = pic_col(i, 6, 30);
         uint32_t ago = i < n ? pic_ago_deg(t, tones[i]) : 100000u;
-        for (j = 10; j < 130; j += 4) {
-            int wob = ago < 300u ? (((j / 4) % 2) * 2 - 1) * (int)(3 - ago / 120u) : 0;
-            cv_rect(x + wob, j, i < n ? 2 : 1, 4, i < n ? (ago < 300u ? pic_hue : K_TEXT) : K_SAND);
-        }
+        int a = pic_ang(i, 6), wob = ago < 300u ? ((int)(ago / 40u) % 2 * 2 - 1) * (int)(3 - ago / 120u) : 0;
+        if (i < n)
+            pic_disc(pic_px(PIC_CX, 58, a) + wob, pic_py(PIC_CY, 58, a), ago < 300u ? 6 : 4, ago < 300u ? pic_hue : K_TEXT);
+        else
+            pic_pt(PIC_CX, PIC_CY, 58, i, 6, 1, K_SAND);
     }
-    cv_rect(pic_col(s->at % imax(1, n), 6, 30) - 6, 134, 12, 3, K_SOFT);
+    pic_rune(PIC_CX - 4, PIC_CY - 6, P(ORDER) == 0 ? RUNE_UP : P(ORDER) == 1 ? RUNE_DOWN : P(ORDER) == 2 ? RUNE_HOLD : RUNE_CROSS, K_TEXT);
 }
 #endif
 

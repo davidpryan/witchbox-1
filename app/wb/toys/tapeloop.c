@@ -83,34 +83,33 @@ static void F(play_changed)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: two reels, their holes turning, a tape between them with a block for each beat that
- * plays; the tape goes fainter and more crooked as the loop wears; the pass count written under */
+/* the picture: the loop as a seal of its beats, joined round in a ring that wears from cream to
+ * sand and jitters with Wobble as the tape ages; a beat that plays a big point, in the hue as it
+ * sounds; a needle for the step; the passes till the loop is renewed as points on the outer ring */
 static void F(draw)(toy_t *t)
 {
     tapeloop_t *s = ST(tapeloop_t);
-    static const uint8_t BEATS[4] = {3, 5, 6, 7};
-    static const int8_t SPOKE[8][2] = {{0, -10}, {7, -7}, {10, 0}, {7, 7}, {0, 10}, {-7, 7}, {-10, 0}, {-7, -7}};
-    int level = imin(2, s->age * P(WEAR) / 10), wave = level * P(WOBBLE) * 3 / 10, i, b, n = BEATS[P(LOOP)];
+    int level = imin(2, s->age * P(WEAR) / 10), wave = level * P(WOBBLE) * 3 / 10, b, n = TL_BEATS[P(LOOP)];
+    int cx = PIC_CX, cy = PIC_CY, steps = n * 4, at = t->steps % steps, renew = P(RENEW), pass = s->age % renew;
+    int jit = t->playing && wave ? (int)((plat_ms() / 120u) & 1u) : 0;
     uint16_t ink = level == 0 ? K_TEXT : level == 1 ? K_SOFT : K_SAND;
-    int rx[2] = {44, 202}, ry = 44, turn = t->playing ? (int)(plat_ms() / 90u) & 7 : 0;
-    char buf[20];
-    for (i = 0; i < 2; i++) {
-        pic_disc(rx[i], ry, 20, K_TEXT);
-        pic_disc(rx[i], ry, 4, K_BG);
-        cv_rect(rx[i] + SPOKE[turn][0] - 2, ry + SPOKE[turn][1] - 2, 5, 5, K_BG);
-        cv_rect(rx[i] - SPOKE[turn][0] - 2, ry - SPOKE[turn][1] - 2, 5, 5, K_BG);
-        cv_rect(rx[i] + (i ? 0 : -1), ry + 20, 2, 106 - ry - 20, K_SOFT);
+    pic_circle(cx, cy, 64, K_SAND);
+    for (b = 0; b < renew; b++)
+        pic_pt(cx, cy, 64, b, renew, b == pass ? 2 : 1, b <= pass ? K_SOFT : K_SAND);
+    for (b = 0; b < n; b++) {
+        int a = pic_ang(b, n), a2 = pic_ang(b + 1, n);
+        int r = 46 + ((b + jit) & 1 ? wave : -wave), r2 = 46 + ((b + 1 + jit) & 1 ? wave : -wave);
+        cv_line(pic_px(cx, r, a), pic_py(cy, r, a), pic_px(cx, r2, a2), pic_py(cy, r2, a2), ink);
     }
-    for (i = 0; i < 21; i++)
-        cv_rect(45 + i * 7, 106 + (i % 2 ? wave : -wave), 7, 2, ink);
-    for (b = 0; b < 7; b++)
-        if (s->hits[b] != TL_NONE && b < n)
-            cv_rect(45 + b * 150 / n, 100, 5, 14, b == s->lit ? pic_hue : ink);
-    if (s->lit >= 0)
-        cv_rect(45 + s->lit * 150 / n, 90, 5, 8, pic_hue);
-    itoa_s(s->age % P(RENEW) + 1, buf);
-    cv_text(96, 124, &FONT_XS, "PASS", K_SOFT);
-    cv_text(124, 124, &FONT_XS, buf, K_SOFT);
+    pic_needle(cx, cy, 36, at, steps, K_LINE);
+    for (b = 0; b < n; b++) {
+        int r = 46 + ((b + jit) & 1 ? wave : -wave);
+        if (s->hits[b] != TL_NONE)
+            pic_pt(cx, cy, r, b, n, 4, b == s->lit ? pic_hue : ink);
+        else
+            pic_pt(cx, cy, r, b, n, 0, K_SAND);
+    }
+    pic_disc(cx, cy, 3, ink);
 }
 #endif
 

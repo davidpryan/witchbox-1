@@ -68,34 +68,33 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: four squares, one a beat, that go red on the kick (with Drive's dark bands) or grey when
- * it drops out, a ring for the clap, a bar above on the open hat, and the closed hats' ticks below */
+/* the picture: the four beats as the corners of a square in the seal, each an orb that fills in
+ * the hue on the kick (less with Drive's crush) and goes sand when it drops out, a cream ring
+ * round it for the clap; the open hats as points between the corners, lit as they sound, and the
+ * closed hats' ticks on an inner ring, tall where they are played; the kick rune in the middle */
 static void F(draw)(toy_t *t)
 {
     fourfloor_t *s = ST(fourfloor_t);
-    static const uint8_t NEED[16] = {9, 2, 0, 5, 10, 3, 0, 7, 9, 1, 0, 6, 10, 4, 0, 8};
-    int b, i, S_ = 40, Y = 36;
-    for (b = 0; b < 4; b++) {
-        int x = 24 + b * 52, sq = s->sq[b], k, n = P(DRIVE) / 2;
-        cv_rect(x, Y, S_, S_, sq == 1 ? pic_hue : sq == 2 ? K_SAND : K_TEXT);
-        if (sq == 1)
-            for (k = 0; k < n; k++)
-                cv_rect(x, Y + (2 * k + 1) * S_ / (2 * n) - 1, S_, 2, K_BG);
-        if (b == s->ring) {
-            cv_rect(x - 3, Y - 3, S_ + 6, 2, K_TEXT); cv_rect(x - 3, Y + S_ + 1, S_ + 6, 2, K_TEXT);
-            cv_rect(x - 3, Y - 3, 2, S_ + 6, K_TEXT); cv_rect(x + S_ + 1, Y - 3, 2, S_ + 6, K_TEXT);
-        }
-        cv_rect(x, Y - 12, S_, 4, b == s->bar_on ? pic_hue : K_SAND);
-    }
+    int cx = PIC_CX, cy = PIC_CY, b, i;
+    pic_seal(cx, cy, 64, 4, 1, K_SAND);
     for (i = 0; i < BAR; i++) {
-        int x = 24 + (i / 4) * 52 + (i % 4) * 12 + 2, on = P(HATS) >= NEED[i];
-        if (i % 4 == 2)
+        int on = FF_NEED[i] && P(HATS) >= FF_NEED[i];
+        if (i % 4 == 0)
             continue;
-        if (i == s->tick)
-            cv_rect(x, Y + S_ + 10, 5, 9, K_TEXT);
+        if (i % 4 == 2)
+            pic_pt(cx, cy, 58, i, BAR, 3, i / 4 == s->bar_on ? pic_hue : K_SOFT);
         else
-            cv_rect(x, Y + S_ + 10, 5, on ? 9 : 3, on ? K_SOFT : K_SAND);
+            pic_pt(cx, cy, 34, i, BAR, i == s->tick ? 3 : on ? 2 : 0, i == s->tick ? K_TEXT : on ? K_SOFT : K_SAND);
     }
+    for (b = 0; b < 4; b++) {
+        int a = pic_ang(b * 4, BAR), x = pic_px(cx, 48, a), y = pic_py(cy, 48, a), sq = s->sq[b];
+        pic_orb(x, y, 11, sq == 1 ? 1000 - P(DRIVE) * 40 : 0, sq == 2 ? K_SAND : K_TEXT, sq == 1 ? pic_hue : K_SAND);
+        if (b == s->ring && P(CLAP)) {
+            pic_circle(x, y, 15, K_TEXT);
+            pic_circle(x, y, 16, K_TEXT);
+        }
+    }
+    pic_rune(cx - 4, cy - 6, RUNE_KICK, K_TEXT);
 }
 #endif
 

@@ -126,21 +126,24 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a metronome arm swinging between Kick and Snare, lit when a hit lands */
+/* the picture: a seal with the kick's rune at its left point and the snare's at its right; a thick
+ * needle swings between them, dragging and rushing as the beat does, in the hue when a hit lands */
 static void F(draw)(toy_t *t)
 {
     limp_t *s = ST(limp_t);
-    int px = 120, py = 128, x = px + s->at * 36 / 1000, dx = x - px, len = 104, y, i;
+    int cx = PIC_CX, cy = PIC_CY, a = (s->at * 8 / 1000 + 32) & 31, x, y, i;
     uint16_t c = s->hot ? pic_hue : K_TEXT;
-    for (y = len; y * y + dx * dx > len * len; y--) ;
-    y = py - y;
-    cv_text(px - 36 - 24, 10, &FONT_XS, "KICK", K_SOFT);
-    cv_text(px + 36 + 4, 10, &FONT_XS, "SNARE", K_SOFT);
-    cv_rect(px - 45, py + 6, 91, 2, K_SOFT);
-    for (i = 0; i < 3; i++)
-        cv_line(px + i - 1, py, x + i - 1, y, c);
-    cv_rect((px + x) / 2 - 5, (py + y) / 2 - 3, 11, 7, c);
-    pic_disc(px, py, 4, K_TEXT);
+    pic_seal(cx, cy, 64, 4, 0, K_SAND);
+    for (i = 0; i < 4; i++)
+        pic_pt(cx, cy, 58, i, 4, 2, K_SAND);
+    pic_rune_at(cx, cy, 48, 3, 4, RUNE_KICK, s->hot && s->at < 0 ? pic_hue : K_TEXT);
+    pic_rune_at(cx, cy, 48, 1, 4, RUNE_SNARE, s->hot && s->at > 0 ? pic_hue : K_TEXT);
+    x = pic_px(cx, 40, a);
+    y = pic_py(cy, 40, a);
+    for (i = -1; i <= 1; i++)
+        cv_line(cx + i, cy, x + i, y, c);
+    pic_disc(x, y, 5, c);
+    pic_disc(cx, cy, 4, K_TEXT);
 }
 #endif
 

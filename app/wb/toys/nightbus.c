@@ -114,35 +114,32 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a street at night: a kerb (thicker with Hum), five lamps, headlights crossing the road
- * near or far, a train's lit windows along the railway, a doorway that lights, a siren in the sky */
+/* the picture: the street as a seal: five lamps as points round the ring; a car a point in the hue
+ * running round inside it, nearer the rim the nearer the traffic; the hum an orb at the centre, as
+ * full as Hum and in the hue as it sounds; the train a run of soft points sliding round the outer
+ * ring; the siren a wave rune flashing at the top; the door a cross at the foot */
 static void F(draw)(toy_t *t)
 {
     nightbus_t *s = ST(nightbus_t);
-    int kerb = 106, rail = 52, i;
-    cv_rect(0, kerb, 240, 1 + P(HUM) * 2 / 5, K_SAND);
-    cv_rect(0, rail, 240, 1, K_SAND);
-    for (i = 0; i < 5; i++) {
-        int x = pic_col(i, 5, 9);
-        cv_rect(x, kerb - 40, 2, 40, K_TEXT);
-        cv_rect(x, kerb - 42, 10, 2, K_TEXT);
-        cv_rect(x + 6, kerb - 40, 6, 3, K_TEXT);
-    }
+    int cx = PIC_CX, cy = PIC_CY, i, far = P(FAR);
+    uint32_t hum = pic_ago(t, 0);
+    pic_seal(cx, cy, 64, 5, 0, K_SAND);
+    for (i = 0; i < 5; i++)
+        pic_pt(cx, cy, 50, i, 5, 3, K_TEXT);
+    pic_orb(cx, cy, 18, P(HUM) * 100, K_SAND, hum < 300u ? pic_hue : K_SOFT);
     for (i = 0; i < s->ncars; i++) {
-        int x = s->car_x[i] * 3 / 4, y = (s->car_y[i] - 26) * 3 / 4, far = P(FAR), r = (5 - (far + 1) / 4) * 3 / 4;
-        pic_disc(x, y, r, pic_hue);
-        pic_disc(x + 12, y, r, pic_hue);
+        int a = ((s->car_x[i] - 6) * 32 / 292) & 31, r = 56 - far * 2, sz = 3 - (far + 1) / 4;
+        pic_disc(pic_px(cx, r, a), pic_py(cy, r, a), sz, pic_hue);
     }
     if (s->has_train)
         for (i = 0; i < 5; i++) {
-            int wx = (s->train + i * 14) * 3 / 4;
-            if (wx >= 0 && wx <= 234)
-                cv_rect(wx, rail - 5, 6, 3, K_SOFT);
+            int a = ((s->train + 70 + i * 14) * 32 / 400) & 31;
+            pic_disc(pic_px(cx, 64, a), pic_py(cy, 64, a), 2, K_SOFT);
         }
     if (s->door)
-        cv_rect(21, kerb - 16, 8, 16, K_TEXT);
+        pic_rune(cx - 4, cy + 28, RUNE_CROSS, K_TEXT);
     if (s->siren && s->flash)
-        pic_disc(196, 21, 2, pic_hue);
+        pic_rune(cx - 4, cy - 42, RUNE_WAVE, pic_hue);
 }
 #endif
 

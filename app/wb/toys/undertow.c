@@ -74,17 +74,20 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a wave that sits at the note's height, rippling while the note sounds, flat in the rests */
+/* the picture: a wheel of sixteen with the needle on the step; an orb at the centre whose ring
+ * wobbles with the note's beating and whose disc drains as the hold runs out, in the hue while
+ * it sounds; the bass rune beneath, the up rune instead when it has risen to the fifth */
 static void F(draw)(toy_t *t)
 {
     undertow_t *s = ST(undertow_t);
-    static const int8_t SIN[16] = {0, 24, 45, 59, 64, 59, 45, 24, 0, -24, -45, -59, -64, -59, -45, -24};
-    int i, on = t->playing && s->left > 0, ph = s->ph / 60;
-    uint16_t c = on ? pic_hue : K_TEXT;
-    for (i = 0; i < 32; i++) {
-        int y = (s->lvl - 26) * 3 / 4 + s->amp * 3 / 4 * SIN[(i + ph / 4) & 15] / 64;
-        cv_rect(i * 8 - 1, y - 1, 8, 3, c);
-    }
+    int cx = PIC_CX, cy = PIC_CY, on = t->playing && s->left > 0, ph = (s->ph / 60) & 31;
+    int r = 34 + s->amp * PIC_SIN[ph] / 260, hold = UT_HOLD[P(HOLD)], fill = on ? 1000 * s->left / hold : 0;
+    pic_seal(cx, cy, 64, BAR, 0, K_SAND);
+    pic_needle(cx, cy, 52, t->steps % BAR, BAR, K_LINE);
+    pic_pt(cx, cy, 58, 1, BAR, 2, K_SOFT);
+    pic_pt(cx, cy, 58, 9, BAR, 2, P(HOLD) < 2 ? K_SOFT : K_SAND);
+    pic_orb(cx, cy, r, fill, on ? K_TEXT : K_SAND, pic_hue);
+    pic_rune(cx - 4, cy - 6, s->deg > toy_root(t, 0) - 7 ? RUNE_UP : RUNE_BASS, on ? K_TEXT : K_SOFT);
 }
 #endif
 

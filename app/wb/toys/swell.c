@@ -82,33 +82,27 @@ static void F(play_changed)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a wedge that grows from nothing as the chord swells, column by column, bent by Curve,
- * and is wiped at the downbeat; the echoes blink at its far end, smaller each time */
+/* the picture: the swell as an orb growing inside its ring as the chord fades in, bent by Curve, in
+ * the hue, and wiped at the downbeat; round it the period's beats as a seal with a needle for where
+ * the swell is; an echo blinks as a cream point at the top, smaller each time */
 static void F(draw)(toy_t *t)
 {
     swell_t *s = ST(swell_t);
-    int cols = 30, i, n, half = 54, x0 = 15, cy = 72;
-    uint16_t c;
-    cv_rect(x0, cy - 1, cols * 7, 2, K_SAND);
-    if (t->playing) {
-        n = s->all ? imin(cols, s->tt * cols / s->all) : 0;
-        c = pic_hue;
-    } else {
-        n = cols;
-        c = K_TEXT;
+    int cx = PIC_CX, cy = PIC_CY, period = SW_EVERY[P(EVERY)] * BAR, beats = period / 4, fill = 1000, k;
+    int at = t->playing ? (toy_bar(t) * BAR + t->steps % BAR) % period : 0;
+    pic_seal(cx, cy, 64, beats, 0, K_SAND);
+    for (k = 0; k < beats; k++)
+        pic_pt(cx, cy, 58, k, beats, k % 4 == 0 ? 2 : 1, K_SAND);
+    pic_needle(cx, cy, 58, at, period, K_LINE);
+    if (t->playing) {               /* f = (tt / all) ^ (1 + curve * 0.35), in integers: a power in 20ths */
+        int q = s->all ? s->tt * 1000 / s->all : 0, pw = 20 + P(CURVE) * 7;
+        for (k = 0; k < pw / 20; k++)
+            fill = fill * q / 1000;
+        fill = fill * (1000 - (pw % 20) * (1000 - q) / 20) / 1000;
     }
-    for (i = 0; i < n; i++) {
-        /* f = ((i + 1) / cols) ^ (1 + curve * 0.35), in integers: (i+1)/cols to a power in 20ths */
-        int f = 1000, q = (i + 1) * 1000 / cols, pw = 20 + P(CURVE) * 7, k;
-        for (k = 0; k < pw / 20; k++) f = f * q / 1000;
-        f = f * (1000 - (pw % 20) * (1000 - q) / 20) / 1000;
-        {
-            int h = imax(1, half * f / 1000);
-            cv_rect(x0 + i * 7, cy - h, 6, 2 * h, c);
-        }
-    }
+    pic_orb(cx, cy, 44, fill, K_TEXT, t->playing ? pic_hue : K_TEXT);
     if (s->blip)
-        cv_rect(x0 + (cols - 3) * 7, cy - s->blip * 3 / 4, 20, s->blip * 3 / 2, K_TEXT);
+        pic_pt(cx, cy, 44, 0, 1, imax(2, s->blip / 8), K_TEXT);
 }
 #endif
 

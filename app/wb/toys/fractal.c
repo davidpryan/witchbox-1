@@ -73,17 +73,28 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the whole tune as a skyline, so the motif shows inside itself at every level; the
- * note sounding lit; the motif alone drawn big at the right */
+/* the picture: the whole tune as points round the outer ring, each pushed out or in by its pitch so
+ * the motif shows inside itself all the way round; the motif alone as the inner seal, big; the
+ * needle on the note sounding, which is in the hue, and the motif's note it is on inside */
 static void F(draw)(toy_t *t)
 {
     fractal_t *s = ST(fractal_t);
-    int i, now = (t->steps / P(RATE)) % s->n, w = imax(1, 180 / s->n), m = P(SIZE);
-    for (i = 0; i < s->n && i * w < 180; i++)
-        cv_rect(6 + i * w, 90 - s->tune[i] * 4, w > 2 ? w - 1 : 1, 4, i == now && t->playing ? pic_hue : K_TEXT);
-    for (i = 0; i < m; i++)
-        cv_rect(196 + i * 10, 60 - s->motif[i] * 6, 8, 5, K_SOFT);
-    cv_text(196, 124, &FONT_XS, "MOTIF", K_DIM);
+    int i, n = s->n > 0 ? s->n : 1, now = (t->steps / P(RATE)) % n, m = P(SIZE), cx = PIC_CX, cy = PIC_CY;
+    pic_circle(cx, cy, 64, K_SAND);
+    pic_circle(cx, cy, 44, K_LINE);
+    for (i = 0; i < n; i++) {
+        int d = s->tune[i], r, lit = i == now && t->playing;
+        d = d < -10 ? -10 : d > 10 ? 10 : d;
+        r = 54 + d;
+        pic_pt(cx, cy, r, i, n, lit ? 4 : n > 40 ? 1 : 2, lit ? pic_hue : K_TEXT);
+    }
+    pic_needle(cx, cy, 40, now, n, t->playing ? pic_hue : K_LINE);
+    pic_seal(cx, cy, 30, m, 1, K_SAND);
+    for (i = 0; i < m; i++) {
+        int d = s->motif[i], lit = i == now % m && t->playing;
+        pic_pt(cx, cy, 24 + d * 2, i, m, lit ? 4 : 3, lit ? pic_hue : K_SOFT);
+    }
+    pic_disc(cx, cy, 2, K_TEXT);
 }
 #endif
 

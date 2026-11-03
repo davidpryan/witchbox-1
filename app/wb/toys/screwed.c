@@ -84,24 +84,18 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a face that sags lower the lower the note, going from white to the colour; eyes that
- * shut for a mumble; a mouth that opens slowly, with Slur, and shuts before the next note */
+/* the picture: the voice as an orb that hangs lower in its seal the lower the note is pitched, going
+ * from cream to the hue with depth, and fills slowly, with Slur, as the mouth opens for a note and
+ * drains before the next; two eye runes above it that shut to rests for a mumble */
 static void F(draw)(toy_t *t)
 {
     screwed_t *s = ST(screwed_t);
-    int low = imax(0, imin(16, 2 - s->n)), sag = low * 2, w = 90, x = 120 - w / 2, top = 4;
+    int low = imax(0, imin(16, 2 - s->n)), full = 30 + low, cy = 62 + low * 2, ex;
     uint16_t c = low >= 11 ? pic_hue : low >= 5 ? K_SOFT : K_TEXT;
-    int h = 4 + s->gape * 3 / 4, ex;
-    pic_rrect(x, top, w, 100 + sag, 16, c);
-    pic_rrect(x + 4, top + 4, w - 8, 92 + sag, 12, K_BG);
-    for (ex = 0; ex < 2; ex++) {
-        int exx = ex ? 120 + 10 : 120 - 20;
-        if (s->blink > 0)
-            cv_rect(exx, top + 34, 9, 2, c);
-        else
-            cv_rect(exx, top + 30, 9, 8, c);
-    }
-    pic_rrect(120 - 12, top + 58 + sag / 2, 24, h, imin(6, h / 2), c);
+    pic_seal(PIC_CX, PIC_CY, 64, 0, 0, K_SAND);
+    for (ex = 0; ex < 2; ex++)
+        pic_rune(PIC_CX - 18 + ex * 28, 22, s->blink > 0 ? RUNE_REST : RUNE_EYE, c);
+    pic_orb(PIC_CX, cy, 24, imin(1000, s->gape * 1000 / full), c, c);
 }
 #endif
 

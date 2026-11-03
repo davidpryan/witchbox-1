@@ -70,20 +70,25 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: two rows, low and high, a block on every step that sounds; wider with Gate, taller with
- * Bite; the one sounding now in colour */
+/* the picture: the bar as a wheel with two rings, low and high; a point on the inner ring for a
+ * step that hammers the root, on the outer for one that jumps the octave, a sand dot for a rest;
+ * fatter with Gate; the one sounding now in the hue, the needle on the step */
 static void F(draw)(toy_t *t)
 {
     octpump_t *s = ST(octpump_t);
-    int w = 4 + P(GATE) * 10 / 10, h = 9 + P(BITE) * 3 / 2, i;
-    pic_hline(12, 228, 128, K_SAND);
-    pic_hline(12, 228, 62, K_SAND);
+    int cx = PIC_CX, cy = PIC_CY, size = 2 + P(GATE) * 3 / 10, i;
+    pic_circle(cx, cy, 64, K_SAND);
+    pic_circle(cx, cy, 58, K_SAND);
+    pic_circle(cx, cy, 42, K_SAND);
+    pic_needle(cx, cy, 36, t->steps % BAR, BAR, K_LINE);
     for (i = 0; i < BAR; i++) {
-        int row = s->cells[i], cy = row == 1 ? 112 : 46;
+        int row = s->cells[i];
         if (!row)
-            continue;
-        cv_rect(12 + i * 13 + (13 - w) / 2, cy - h / 2, w, h, i == s->lit ? pic_hue : K_TEXT);
+            pic_pt(cx, cy, 42, i, BAR, 0, K_SAND);
+        else
+            pic_pt(cx, cy, row == 1 ? 42 : 58, i, BAR, i == s->lit ? size + 1 : size, i == s->lit ? pic_hue : K_TEXT);
     }
+    pic_rune(cx - 4, cy - 6, RUNE_BASS, s->lit >= 0 && s->cells[s->lit] == 2 ? pic_hue : K_TEXT);
 }
 #endif
 

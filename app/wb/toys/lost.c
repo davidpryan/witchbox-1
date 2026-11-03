@@ -150,25 +150,27 @@ static void F(play_changed)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a skyline of dark towers; a window lights for each note, higher floors for higher
- * notes, dims, and goes out; a droop sags it a floor */
+/* the picture: the skyline as a seal: a window lit for each note is a point, its tower the
+ * angle, its floor the radius, higher notes further out; it glows in the hue, dims to soft, and
+ * goes out, and a droop sags it a floor inward; a faint spoke a tower; the lead rune in the middle, the down rune while
+ * a phrase is being answered lower */
 static void F(draw)(toy_t *t)
 {
     lost_t *s = ST(lost_t);
-    static const uint8_t X[8] = {4, 36, 61, 97, 125, 158, 184, 218};
-    int k, i;
-    for (k = 0; k < 8; k++) {
-        int w = LO_TOWER_W[k] * 3 / 4, h = LO_TOWER_H[k] * 3 / 4, cols = (LO_TOWER_W[k] - 4) / 10, f, c;
-        cv_rect(X[k], 144 - h, w, h, RGB(0, 0, 0));
-        for (f = 0; f < F(floors)(LO_TOWER_H[k]); f++)
-            for (c = 0; c < cols; c++)
-                cv_rect(X[k] + (w - cols * 7 + 3) / 2 + c * 7, 144 - 13 - f * 10, 4, 6, K_SAND);
+    int cx = PIC_CX, cy = PIC_CY, i, k;
+    pic_circle(cx, cy, 64, K_SAND);
+    pic_circle(cx, cy, 16, K_SAND);
+    for (k = 0; k < 8; k++) {           /* a spoke a tower */
+        int a = k * 4;
+        cv_line(pic_px(cx, 18, a), pic_py(cy, 18, a), pic_px(cx, 62, a), pic_py(cy, 62, a), K_LINE);
+        pic_pt(cx, cy, 64, k, 8, 1, K_SAND);
     }
     for (i = 0; i < s->nl; i++) {
-        int k = s->ltower[i], w = LO_TOWER_W[k] * 3 / 4, cols = (LO_TOWER_W[k] - 4) / 10;
-        int x = X[k] + (w - cols * 7 + 3) / 2 + s->lcol[i] * 7, y = 144 - 13 - s->lfloor[i] * 10;
-        cv_rect(x, y, 4, 6, s->lms[i] * 2 < s->lmax[i] ? K_SOFT : pic_hue);
+        int a = (s->ltower[i] * 4 + s->lcol[i]) & 31, r = 20 + s->lfloor[i] * 4;
+        int dim = s->lms[i] * 2 < s->lmax[i];
+        pic_disc(pic_px(cx, r, a), pic_py(cy, r, a), dim ? 3 : 5, dim ? K_SOFT : pic_hue);
     }
+    pic_rune(cx - 4, cy - 6, s->reply ? RUNE_DOWN : RUNE_LEAD, s->nl ? K_TEXT : K_SOFT);
 }
 #endif
 

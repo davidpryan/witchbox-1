@@ -67,17 +67,21 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: one bar across the middle, fatter for more notes, swelling as the tone opens; the
- * overtones come in above it one by one, shorter and higher */
+/* the picture: an orb at the centre that breathes, filling and draining with the tone; the
+ * overtones as rings that come in round it one by one as it opens; the notes it holds as big
+ * points on the outer seal, joined when there are several, lit in the hue when struck again */
 static void F(draw)(toy_t *t)
 {
     drone_t *s = ST(drone_t);
     int tone = t->playing ? s->tone : 0, notes = (P(WHICH) == 2 ? 2 : 1) * (P(OCTAVE) == 2 ? 2 : 1);
-    int half = 4 + notes * 2 + tone * 6 / 100, n, k;
-    cv_rect(30, 93 - half, 180, 2 * half, K_TEXT);
+    int cx = PIC_CX, cy = PIC_CY, n, k;
+    pic_seal(cx, cy, 64, notes, notes > 1 ? 1 : 0, K_SAND);
+    for (k = 0; k < notes; k++)
+        pic_pt(cx, cy, 58, k, notes, 4, pic_ago(t, k) < 400u ? pic_hue : K_TEXT);
+    pic_orb(cx, cy, 22, tone * 10, K_TEXT, pic_hue);
     n = t->playing ? (P(OVER) * (30 + tone * 70 / 100) + 50) / 100 : 0;
-    for (k = 0; k < n && k < 10; k++)
-        cv_rect(30 + k * 8, 93 - 27 - k * 7, 180 - k * 16, 2, pic_hue);
+    for (k = 0; k < n && k < 6; k++)
+        pic_circle(cx, cy, 26 + k * 4, k < 3 ? K_SOFT : K_SAND);
 }
 #endif
 

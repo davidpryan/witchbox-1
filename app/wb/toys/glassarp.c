@@ -118,20 +118,27 @@ static void F(frame)(toy_t *t, int ms)
 static void F(play_changed)(toy_t *t) { ST(glassarp_t)->ne = 0; }
 
 #ifdef WB_PICTURES
-/* the picture: eight crystals, one a note of the run, tall for high notes; each flares when it sounds,
- * dimmer for an echo, with a gem above it when the note leaps an octave */
+/* the picture: the run as a figure on the seal: eight points, one a step, each as far out as its
+ * note is high, joined in the order they are played (a spiral for Up, a lemon for In-out, a
+ * tangle for Random); a point flares in the hue as it sounds, softer for an echo, with a spark
+ * beyond it when the note leaps an octave; the needle on the step */
 static void F(draw)(toy_t *t)
 {
     glassarp_t *s = ST(glassarp_t);
-    int i;
+    int cx = PIC_CX, cy = PIC_CY, i, now = t->steps % GA_N;
+    pic_seal(cx, cy, 64, GA_N, 0, K_SAND);
     for (i = 0; i < GA_N; i++) {
-        int x = pic_col(i, GA_N, 18), h = (36 + (s->root + s->order[i]) * 6) * 3 / 4, top = 132 - h, k;
+        int j = (i + 1) % GA_N, a = pic_ang(i, GA_N), b = pic_ang(j, GA_N);
+        int ra = 22 + s->order[i] * 2, rb = 22 + s->order[j] * 2;
+        cv_line(pic_px(cx, ra, a), pic_py(cy, ra, a), pic_px(cx, rb, b), pic_py(cy, rb, b), K_LINE);
+    }
+    pic_needle(cx, cy, 58, now, GA_N, K_LINE);
+    for (i = 0; i < GA_N; i++) {
+        int r = 22 + s->order[i] * 2;
         uint16_t c = s->glow[i] == 1 ? pic_hue : s->glow[i] == 2 ? K_SOFT : K_TEXT;
-        for (k = 0; k < 3; k++)
-            cv_rect(x - 1 - k, top + 3 * k, 3 + 3 * k, 3, c);
-        cv_rect(x - 6, top + 9, 12, h - 9, c);
+        pic_pt(cx, cy, r, i, GA_N, s->glow[i] == 1 ? 5 : 3, c);
         if (s->gem[i])
-            cv_rect(x - 2, top - 7, 5, 5, c);
+            pic_pt(cx, cy, r + 9, i, GA_N, 1, c);
     }
 }
 #endif

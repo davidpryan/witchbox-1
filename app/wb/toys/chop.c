@@ -96,20 +96,25 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: twelve slices of a waveform, shuffled a few at a time; the slice being fired jumps up,
- * in colour, paler until its repeat reaches full strength */
+/* the picture: the twelve slices as a seal of twelve points, sized by the slice, shuffled a few at a
+ * time between bursts; the slice being fired at the needle's end, big in the hue once its repeat
+ * reaches full strength and soft until then; an orb at the centre that fills as the burst runs */
 static void F(draw)(toy_t *t)
 {
     chop_t *s = ST(chop_t);
     static const uint8_t WAVE[12] = {22, 46, 72, 93, 78, 52, 33, 61, 87, 67, 39, 20};
-    int i;
+    int i, cx = PIC_CX, cy = PIC_CY, burst = P(BURST);
+    pic_seal(cx, cy, 64, CH_N, 0, K_SAND);
+    if (s->lit >= 0)
+        pic_needle(cx, cy, 48, s->lit, CH_N, s->full ? pic_hue : K_SOFT);
     for (i = 0; i < CH_N; i++) {
-        int x = 12 + i * 18, h = WAVE[s->order[i]];
+        int sz = 1 + WAVE[s->order[i]] / 24;
         if (i == s->lit)
-            cv_rect(x, 78 - h / 2 - 10, 12, h, s->full ? pic_hue : K_SOFT);
+            pic_pt(cx, cy, 48, i, CH_N, sz + 2, s->full ? pic_hue : K_SOFT);
         else
-            cv_rect(x, 78 - h / 2, 12, h, K_TEXT);
+            pic_pt(cx, cy, 48, i, CH_N, sz, K_TEXT);
     }
+    pic_orb(cx, cy, 16, s->left ? (burst - s->left) * 1000 / burst : s->lit >= 0 ? 1000 : 0, K_SAND, pic_hue);
 }
 #endif
 

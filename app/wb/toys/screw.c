@@ -119,24 +119,25 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a reel with twelve rim dots and three spokes that turn at the band's speed, white
- * at full speed and purple as it drags or stops; the speed written under */
+/* the picture: the reel as a seal: twelve rim points, and a triangle of three spokes inside that
+ * turns at the band's speed, cream at full speed and the hue as it drags or stops; an orb at the
+ * centre as full as the speed, empty while the tape stands still */
 static void F(draw)(toy_t *t)
 {
     screw_t *s = ST(screw_t);
-    int i, v = S.speed, cx = 120, cy = 60;
+    int i, v = S.speed, cx = PIC_CX, cy = PIC_CY, a0 = s->turn / 32;
     uint16_t c = v >= 95 ? K_TEXT : v >= 70 ? K_SOFT : pic_hue;
-    char b[8];
+    pic_seal(cx, cy, 64, 12, 0, K_SAND);
     for (i = 0; i < 12; i++)
-        pic_disc(cx + 48 * PIC_SIN[(i * 32 / 12) & 31] / 100, cy - 48 * PIC_SIN[(i * 32 / 12 + 8) & 31] / 100, 2, K_TEXT);
-    pic_disc(cx, cy, 7, K_TEXT);
+        pic_pt(cx, cy, 58, i, 12, 2, K_TEXT);
     for (i = 0; i < 3; i++) {
-        int a = (s->turn / 32 + i * 32 / 3) & 31;
-        pic_disc(cx + 34 * PIC_SIN[a] / 100, cy - 34 * PIC_SIN[(a + 8) & 31] / 100, 5, c);
+        int a = ((a0 * 3 + i * 32) / 3) & 31, b = ((a0 * 3 + (i + 1) * 32) / 3) & 31;
+        int x = pic_px(cx, 44, a), y = pic_py(cy, 44, a);
+        cv_line(x, y, pic_px(cx, 44, b), pic_py(cy, 44, b), c);
+        cv_line(cx, cy, x, y, c);
+        pic_disc(x, y, 4, c);
     }
-    itoa_s(v, b);
-    cat(b, "%");
-    cv_text(104, 118, &FONT_B, b, K_TEXT);
+    pic_orb(cx, cy, 16, imax(0, imin(100, v)) * 10, c, c);
 }
 #endif
 

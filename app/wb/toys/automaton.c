@@ -91,20 +91,27 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the bars as rows of cells growing down the screen, the newest at the bottom, the step
- * being played lit */
+/* the picture: the bars as rings of sixteen cells, the newest the outer ring, each older bar a ring
+ * further in, so the rule's pattern grows out from the centre; the step being played a needle, its
+ * cell in the hue when live */
 static void F(draw)(toy_t *t)
 {
     automaton_t *s = ST(automaton_t);
-    int r, i, now = t->steps % BAR;
-    for (r = 0; r < AM_HIST; r++) {
+    int r, i, now = t->steps % BAR, cx = PIC_CX, cy = PIC_CY;
+    pic_circle(cx, cy, 64, K_SAND);
+    pic_needle(cx, cy, 58, now, BAR, t->playing ? pic_hue : K_LINE);
+    for (r = 0; r < 5; r++) {
         uint16_t row = s->hist[(s->hp + AM_HIST - 1 - r) % AM_HIST];
-        int y = 120 - r * 16;
-        for (i = 0; i < 16; i++)
+        int rad = 56 - r * 10;
+        uint16_t c = r == 0 ? K_TEXT : r == 1 ? K_SOFT : K_SAND;
+        for (i = 0; i < 16; i++) {
             if ((row >> i) & 1u)
-                cv_rect(8 + i * 14, y, 11, 12, r == 0 ? (i == now && t->playing ? pic_hue : K_TEXT) : r == 1 ? K_SOFT : K_SAND);
+                pic_pt(cx, cy, rad, i, BAR, r == 0 ? 3 : 2, r == 0 && i == now && t->playing ? pic_hue : c);
+            else if (r == 0)
+                pic_pt(cx, cy, rad, i, BAR, 0, K_SAND);
+        }
     }
-    pic_bar(t->steps, BAR);
+    pic_disc(cx, cy, 3, K_TEXT);
 }
 #endif
 

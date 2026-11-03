@@ -67,20 +67,20 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: three triangles stacked, further apart with Detune, shading towards the colour as the
- * tone opens, thrown sideways for a moment when the chord slips */
+/* the picture: three spires in a ring, root, fifth and root, further apart with Detune, each
+ * filling with the hue as the tone opens over the chord and thrown sideways for a moment when
+ * it slips; the held bars as points on the seal, the one being held lit */
 static void F(draw)(toy_t *t)
 {
     coven_t *s = ST(coven_t);
-    int gap = 28 + P(DETUNE) * 3 / 2, dx = s->jolt ? 20 : 0, k, i, shade = s->opened * 6 / 100;
-    uint16_t c = shade >= 4 ? pic_hue : shade >= 2 ? K_SOFT : K_TEXT;
-    for (k = -1; k <= 1; k++) {
-        int top = 72 + k * gap - 12;
-        for (i = 0; i < 8; i++) {
-            int half = 3 + i * 3;
-            cv_rect(120 + dx - half, top + i * 3, 2 * half, 3, c);
-        }
-    }
+    int cx = PIC_CX, cy = PIC_CY, gap = 30 + P(DETUNE) * 3 / 2, dx = s->jolt ? 10 : 0, k;
+    int bars = CV_HOLD[P(HOLD)], bar = toy_bar(t) % bars;
+    pic_seal(cx, cy, 64, bars, 0, K_SAND);
+    for (k = 0; k < bars; k++)
+        pic_pt(cx, cy, 58, k, bars, 3, k == bar && t->playing ? pic_hue : K_TEXT);
+    for (k = -1; k <= 1; k++)
+        pic_spire(cx + dx + k * gap, cy + 26, 26, k ? 44 : 56, s->opened * 10, s->jolt ? pic_hue : K_TEXT, pic_hue);
+    pic_hline(cx - gap - 14, cx + gap + 15, cy + 28, K_SOFT);
 }
 #endif
 

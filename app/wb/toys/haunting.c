@@ -72,22 +72,30 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: every note as a dot that drops a step each time it comes back, fading as its life runs
- * out: chains of ghosts falling */
+/* the picture: the scale as a seal, a note's pitch its angle; every echo waiting to come back is a
+ * point on the ring, with the ghosts it has still to become stepping inwards and lower along a
+ * chord, fading as its life runs out; the seal flares in the hue as a note sounds */
 static void F(draw)(toy_t *t)
 {
     haunting_t *s = ST(haunting_t);
-    int i, root = toy_root(t, 0);
+    int i, k, cx = PIC_CX, cy = PIC_CY, hot = pic_ago(t, -1) < 150u;
+    pic_seal(cx, cy, 64, 8, 0, hot ? K_SOFT : K_SAND);
+    for (i = 0; i < 8; i++)
+        pic_pt(cx, cy, 50, i, 8, 0, K_SAND);
     for (i = 0; i < s->n; i++) {
-        int x = 20 + i * 200 / HN_Q + (HN_Q - i) * 3, y = 124 - (s->deg[i] + 7) * 5, life = s->life[i];
-        int k;
-        pic_disc(x, y, 3, life > 2 ? K_TEXT : life > 1 ? K_SOFT : K_SAND);
-        for (k = 1; k < life && k < 4; k++)
-            pic_disc(x, y + k * P(FALL) * 5 + k * 2, 1, K_SAND);
+        int life = s->life[i], a = (s->deg[i] + 14) * 2 & 31, px = pic_px(cx, 50, a), py = pic_py(cy, 50, a);
+        for (k = 1; k < life && k < 5; k++) {
+            int b = (s->deg[i] - k * P(FALL) + 14) * 2 & 31, r = 50 - k * 9;
+            int qx = pic_px(cx, r, b), qy = pic_py(cy, r, b);
+            cv_line(px, py, qx, qy, K_LINE);
+            pic_disc(qx, qy, 1, K_SAND);
+            px = qx;
+            py = qy;
+        }
+        pic_pt(cx, cy, 50, (s->deg[i] + 14) * 2 & 31, 32, life > 2 ? 3 : 2, life > 2 ? K_TEXT : life > 1 ? K_SOFT : K_SAND);
     }
-    if (pic_ago(t, 0) < 120u)
-        pic_disc(224, 124 - 14 * 5, 5, pic_hue);
-    (void)root;
+    pic_disc(cx, cy, hot ? 6 : 3, hot ? pic_hue : K_SAND);
+    pic_rune(cx - 4, cy - 24, RUNE_VOICE, K_TEXT);
 }
 #endif
 

@@ -66,20 +66,36 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the loop as a ring of steps, the hits filled, spread as evenly as they can be; a
- * hand sweeps round it; a hit that jumps an octave sits further out */
+/* the picture: the loop as a seal of so many points, the hits big and joined by chords into the
+ * Euclidean polygon, the rests sand grains; a hit that jumps an octave sits out on the inner ring;
+ * the needle sweeps round and the hit under it sounds in the hue */
 static void F(draw)(toy_t *t)
 {
     pulsar_t *s = ST(pulsar_t);
-    int n = P(STEPS), i, now = t->pos % n, cx = 120, cy = 72;
+    int n = P(STEPS), i, now = t->pos % n, cx = PIC_CX, cy = PIC_CY, prev = -1, first = -1;
+    pic_seal(cx, cy, 64, n, 0, K_SAND);
     for (i = 0; i < n; i++) {
-        int a = (i * 32 / n) & 31, r = s->on[i] && s->rank[i] < P(JUMPS) ? 56 : 48;
-        int x = cx + r * PIC_SIN[a] / 100, y = cy - r * PIC_SIN[(a + 8) & 31] / 100;
-        pic_disc(x, y, s->on[i] ? 5 : 2, i == now && t->playing ? pic_hue : s->on[i] ? K_TEXT : K_SAND);
+        if (!s->on[i])
+            continue;
+        if (prev >= 0)
+            pic_chord(cx, cy, 46, prev, i, n, K_LINE);
+        else
+            first = i;
+        prev = i;
     }
-    {
-        int a = (now * 32 / n) & 31;
-        cv_line(cx, cy, cx + 38 * PIC_SIN[a] / 100, cy - 38 * PIC_SIN[(a + 8) & 31] / 100, K_SOFT);
+    if (first >= 0 && prev != first)
+        pic_chord(cx, cy, 46, prev, first, n, K_LINE);
+    pic_needle(cx, cy, 40, now, n, t->playing ? pic_hue : K_LINE);
+    for (i = 0; i < n; i++) {
+        int jump = s->on[i] && s->rank[i] < P(JUMPS), lit = i == now && t->playing && s->on[i];
+        if (!s->on[i])
+            pic_pt(cx, cy, 46, i, n, 0, K_SAND);
+        else
+            pic_pt(cx, cy, jump ? 58 : 46, i, n, lit ? 6 : 4, lit ? pic_hue : K_TEXT);
+        if (jump) {                             /* a spoke from the polygon out to the jumping hit */
+            int a = pic_ang(i, n);
+            cv_line(pic_px(cx, 46, a), pic_py(cy, 46, a), pic_px(cx, 58, a), pic_py(cy, 58, a), K_SOFT);
+        }
     }
     pic_disc(cx, cy, 3, K_TEXT);
 }

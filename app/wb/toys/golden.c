@@ -74,20 +74,24 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a golden spiral of squares, the Fibonacci squares, the one whose number plays now lit;
- * the rhythm's long and short as the frame under it */
+/* the picture: the notes laid round the seal at the golden angle, each a turn of 0.618 on from the
+ * last, so they spiral in like seeds in a sunflower, the newest biggest and in the hue at the rim,
+ * the old ones small towards the centre; the orb at the centre is full while a long note holds */
 static void F(draw)(toy_t *t)
 {
     golden_t *s = ST(golden_t);
-    static const uint8_t SQ[6][3] = {{152, 10, 88}, {64, 10, 88}, {64, 98, 34}, {98, 98, 34}, {98, 77, 21}, {119, 77, 21}};
-    int i, k = s->k % 6;
-    for (i = 0; i < 6; i++) {
-        int x = SQ[i][0], y = SQ[i][1], w = SQ[i][2];
-        cv_rect(x, y, w, w, i == k && t->playing ? pic_hue : K_PANEL);
-        cv_rect(x, y, w, 1, K_SOFT); cv_rect(x, y, 1, w, K_SOFT);
-        cv_rect(x, y + w - 1, w, 1, K_SOFT); cv_rect(x + w - 1, y, 1, w, K_SOFT);
+    int j, cx = PIC_CX, cy = PIC_CY;
+    pic_seal(cx, cy, 64, 5, 2, K_LINE);
+    for (j = 12; j >= 0; j--) {
+        int k = s->k - j, a, r;
+        if (k < 0)
+            continue;
+        a = (k * 20) & 31;                      /* 20/32 of a turn: the golden angle, near enough */
+        r = 56 - j * 4;
+        pic_disc(pic_px(cx, r, a), pic_py(cy, r, a), j == 0 ? (pic_ago(t, -1) < 150u ? 6 : 5) : j < 4 ? 3 : 2,
+                 j == 0 ? pic_hue : j < 4 ? K_TEXT : K_SOFT);
     }
-    cv_rect(8, 132, s->left > 0 ? 20 : 10, 3, K_TEXT);
+    pic_orb(cx, cy, 8, t->playing && s->left > 0 ? 1000 : 0, K_SAND, K_TEXT);
 }
 #endif
 

@@ -88,23 +88,23 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the grown string as a row of blocks, long and short, wrapping into lines like lichen
- * spreading; the note sounding lit */
+/* the picture: the grown string as points round a seal, the long notes big and cream, the short
+ * small, as many as the rule grew; the note sounding in the hue under the needle, and the orb at the
+ * centre draining as its hold runs out; a ring inside for each generation */
 static void F(draw)(toy_t *t)
 {
     lichen_t *s = ST(lichen_t);
-    int i, x = 8, y = 10;
-    for (i = 0; i < s->n; i++) {
-        int w = s->len[i] * 5 + 2;
-        if (x + w > 232) {
-            x = 8;
-            y += 14;
-            if (y > 126)
-                break;
-        }
-        cv_rect(x, y, w, 10, i == s->at - 1 || (s->at == 0 && i == s->n - 1) ? (t->playing ? pic_hue : K_TEXT) : K_TEXT);
-        x += w + 3;
+    int i, n = s->n > 0 ? s->n : 1, cx = PIC_CX, cy = PIC_CY, g, cur = s->at > 0 ? s->at - 1 : n - 1;
+    int len = s->len[cur] > 0 ? s->len[cur] : 1;
+    pic_circle(cx, cy, 64, K_SAND);
+    for (g = 0; g < P(GENERATIONS); g++)
+        pic_circle(cx, cy, 58 - g * 4, g == P(GENERATIONS) - 1 ? K_SAND : K_LINE);
+    pic_needle(cx, cy, 38, cur, n, t->playing ? pic_hue : K_LINE);
+    for (i = 0; i < n; i++) {
+        int lng = s->len[i] > (uint8_t)(1 + P(HOLD)), lit = i == cur && t->playing;
+        pic_pt(cx, cy, 46, i, n, lit ? (lng ? 5 : 4) : lng ? 3 : 1, lit ? pic_hue : lng ? K_TEXT : K_SOFT);
     }
+    pic_orb(cx, cy, 16, t->playing ? (s->left + 1) * 1000 / len : 0, K_SAND, pic_hue);
 }
 #endif
 

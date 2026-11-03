@@ -54,22 +54,34 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the line as drops at each step's height, bigger where accented, joined by the glides
- * that bend one into the next; the step sounding in colour */
+/* the picture: the line as a wheel of sixteen: each step's drop sits out from the centre by its
+ * height, big where accented, and the glides are the chords bending one drop into the next, so the
+ * pattern is a jagged star; the needle is the playhead, the drop sounding in the hue */
 static void F(draw)(toy_t *t)
 {
     drip_t *s = ST(drip_t);
-    int i, now = t->steps % BAR, px = -1, py = 0;
+    int i, now = t->steps % BAR, pi = -1, pr = 0;
+    pic_circle(PIC_CX, PIC_CY, 64, K_SAND);
+    pic_circle(PIC_CX, PIC_CY, 22, K_SAND);
     for (i = 0; i < BAR; i++) {
-        int on = i == 0 || s->rank[i] < P(NOTES), x = 12 + i * 14, y = 110 - (s->deg[i] + 7) * 5;
+        int on = i == 0 || s->rank[i] < P(NOTES), r = 26 + (s->deg[i] + 7) * 2;
         if (!on)
             continue;
-        if (px >= 0 && P(GLIDE))
-            cv_line(px, py, x, y, K_LINE);
-        pic_disc(x, y, s->acc[i] * 2 < P(ACCENT) ? 4 : 2, i == now && t->playing ? pic_hue : K_TEXT);
-        px = x; py = y;
+        if (pi >= 0 && P(GLIDE)) {
+            int a = pic_ang(pi, BAR), b = pic_ang(i, BAR);
+            cv_line(pic_px(PIC_CX, pr, a), pic_py(PIC_CY, pr, a), pic_px(PIC_CX, r, b), pic_py(PIC_CY, r, b), K_LINE);
+        }
+        pi = i; pr = r;
     }
-    pic_bar(t->steps, BAR);
+    pic_needle(PIC_CX, PIC_CY, 64, now, BAR, t->playing ? pic_hue : K_LINE);
+    for (i = 0; i < BAR; i++) {
+        int on = i == 0 || s->rank[i] < P(NOTES), r = 26 + (s->deg[i] + 7) * 2, cur = i == now && t->playing;
+        if (on)
+            pic_pt(PIC_CX, PIC_CY, r, i, BAR, (s->acc[i] * 2 < P(ACCENT) ? 4 : 2) + cur, cur ? pic_hue : K_TEXT);
+        else
+            pic_pt(PIC_CX, PIC_CY, 22, i, BAR, 0, K_SAND);
+    }
+    pic_rune(PIC_CX - 4, PIC_CY - 6, RUNE_WAVE, K_SOFT);
 }
 #endif
 

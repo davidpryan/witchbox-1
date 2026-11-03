@@ -70,25 +70,20 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a moon whose phase is the conductor's, full at home and waning as it moves off; the
- * scale's name under it */
+/* the picture: the moon as an orb in a seal, full and cream at home, waning soft as each phase
+ * takes the band further off; the cycle's phases as points round the ring, the one it is in lit in
+ * the hue, and the needle creeping round through the phase towards the next move */
 static void F(draw)(toy_t *t)
 {
     moon_t *s = ST(moon_t);
-    int ph = s->phase, cx = 120, cy = 62, dy, home = s->phase == 0;
-    char b[16];
-    pic_disc(cx, cy, 36, home ? K_TEXT : K_SOFT);
-    if (!home) {
-        int off = imin(8, ph) * 9;
-        for (dy = -36; dy <= 36; dy++) {
-            int dx = 0;
-            while (dx < 36 && (dx + 1) * (dx + 1) + dy * dy <= 36 * 36) dx++;
-            cv_rect(cx - dx + off / 4, cy + dy, imax(0, dx * 2 - off), 1, K_PANEL);
-        }
-    }
-    caps(b, SCALE_NAME[S.scale.value], 16);
-    cv_text(cx - 30, 110, &FONT_XS, b, pic_hue);
-    cv_text(cx - 30, 126, &FONT_XS, home ? "HOME" : "AWAY", K_DIM);
+    int ph = s->phase, n = P(HOME) + 1, every = MN_EVERY[P(EVERY)], at = toy_now(t) % every, cx = PIC_CX, cy = PIC_CY, i;
+    int home = ph == 0, fill = (n - ph) * 1000 / n;
+    pic_seal(cx, cy, 64, n, 0, K_SAND);
+    pic_needle(cx, cy, 58, (ph * 32 + at * 32 / every) / n, 32, K_LINE);
+    for (i = 0; i < n; i++)
+        pic_pt(cx, cy, 58, i, n, i == ph ? 4 : 2, i == ph ? pic_hue : i == 0 ? K_TEXT : K_SAND);
+    pic_orb(cx, cy, 36, fill < 100 ? 100 : fill, home ? K_TEXT : K_SAND, home ? K_TEXT : K_SOFT);
+    pic_rune(cx - 4, cy - 6, home ? RUNE_HOLD : RUNE_DOWN, K_BG);
 }
 #endif
 

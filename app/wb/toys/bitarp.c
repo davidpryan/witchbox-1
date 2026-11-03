@@ -93,18 +93,30 @@ static void F(play_changed)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: sixteen pixels in a staircase of chord notes, wider with Pulse and taller with Crush,
- * the one sounding in colour */
+/* the picture: sixteen pixels round a seal in a staircase of chord notes, each as far out as its
+ * note is high, bigger with Pulse and squarer with Crush; the one sounding in the hue, the glitch's
+ * slice drawn as a loop in the hue while it repeats; the lead rune in the middle */
 static void F(draw)(toy_t *t)
 {
     bitarp_t *s = ST(bitarp_t);
-    static const int8_t STAIR[8] = {0, 1, 2, 3, 4, 3, 2, 1};
     int8_t tones[16];
-    int n = tune_tones(s->root, 0, 20, tones), i, w = 3 + P(PULSE), h = 5 + P(CRUSH) * 3 / 4;
-    for (i = 0; i < 16; i++) {
-        int note = tones[imin(n - 1, STAIR[i % 8])], y = 126 - note * 9, x = 18 + i * 14;
-        cv_rect(x - w / 2, y - h / 2, w, h, i == s->lit ? pic_hue : K_TEXT);
+    int cx = PIC_CX, cy = PIC_CY, n = tune_tones(s->root, 0, 20, tones), i, w = 2 + P(PULSE) / 3;
+    pic_seal(cx, cy, 64, BA_N, 0, K_SAND);
+    pic_needle(cx, cy, 58, s->lit < 0 ? 0 : s->lit, BA_N, s->lit < 0 ? K_LINE : K_SOFT);
+    for (i = 0; i < BA_N; i++) {
+        int note = tones[imin(n - 1, BA_STAIR[i % 8])], r = 22 + note * 3, a = pic_ang(i, BA_N);
+        int x = pic_px(cx, r, a), y = pic_py(cy, r, a), ww = i == s->lit ? w + 1 : w;
+        if (P(CRUSH) > 4)
+            cv_rect(x - ww, y - ww, 2 * ww + 1, 2 * ww + 1, i == s->lit ? pic_hue : K_TEXT);
+        else
+            pic_disc(x, y, ww, i == s->lit ? pic_hue : K_TEXT);
     }
+    if (s->again) {
+        int k;
+        for (k = 0; k < BA_SLICE; k++)
+            pic_chord(cx, cy, 20, (s->from + k) % BA_N, (s->from + k + 1) % BA_N, BA_N, pic_hue);
+    }
+    pic_rune(cx - 4, cy - 6, RUNE_LEAD, s->again ? pic_hue : K_TEXT);
 }
 #endif
 

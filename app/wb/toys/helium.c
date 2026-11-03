@@ -70,19 +70,28 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a balloon that rises with every note of the phrase and sinks back in the gap; the
- * call on the left, its answer on the right */
+/* the picture: two seals, the call's and the answer's, each with the phrase's notes as points out from
+ * the centre by their height (the answer's lower, higher or turned round); the seal singing is in
+ * cream with its note in the hue, the other sleeps in sand; the orb inside each rises with the voice */
 static void F(draw)(toy_t *t)
 {
-    int gap = HE_GAP[P(GAP)], at = toy_now(t) % (gap * 2), answer = at >= gap, x = answer ? 168 : 72, y;
+    helium_t *s = ST(helium_t);
+    int gap = HE_GAP[P(GAP)], n = P(PHRASE), at = toy_now(t) % (gap * 2), k = (at % gap) / 2, h, i;
     uint32_t ago = pic_ago(t, -1);
-    int lift = ago < 2000u ? (int)(2000u - ago) * 40 / 2000 : 0;
-    y = 96 - lift;
-    cv_line(x, y + 14, x + 2, y + 40, K_SOFT);
-    pic_disc(x, y, 14, ago < 150u ? pic_hue : K_TEXT);
-    pic_disc(x - 5, y - 5, 2, K_BG);
-    cv_text(60, 124, &FONT_XS, "CALL", answer ? K_DIM : K_SOFT);
-    cv_text(150, 124, &FONT_XS, "ANSWER", answer ? K_SOFT : K_DIM);
+    int lift = ago < 1500u ? (int)(1500u - ago) * 1000 / 1500 : 0;
+    for (h = 0; h < 2; h++) {
+        int cx = h ? 176 : 64, live = (at >= gap) == h && t->playing;
+        pic_seal(cx, PIC_CY, 50, n, 0, live ? K_SOFT : K_SAND);
+        pic_orb(cx, PIC_CY, 14, live ? lift : 0, K_SAND, pic_hue);
+        for (i = 0; i < n; i++) {
+            int deg = h ? (P(ANSWER) == 0 ? s->phrase[i] - 3 : P(ANSWER) == 1 ? s->phrase[i] + 2 : s->phrase[n - 1 - i]) : s->phrase[i];
+            int cur = live && k == i && k < n && at % 2 == 0;
+            pic_pt(cx, PIC_CY, 20 + deg * 2, i, n, cur ? 5 : 3, cur ? pic_hue : live ? K_TEXT : K_SAND);
+        }
+        if (live && k < n)
+            pic_needle(cx, PIC_CY, 44, k, n, K_LINE);
+    }
+    pic_rune(PIC_CX - 4, PIC_CY - 6, P(ANSWER) == 0 ? RUNE_DOWN : P(ANSWER) == 1 ? RUNE_UP : RUNE_CROSS, K_TEXT);
 }
 #endif
 

@@ -47,18 +47,22 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the swell as a wedge over the phrase, the bow's strokes as nervous ticks along it, the
- * one sounding in colour; the voicing opens as it climbs */
+/* the picture: the swell as a spire that fills as the phrase climbs and drains as it dies back; the
+ * bow's strokes are the points of a ring round it, one per step of the phrase, cream where the bow
+ * moves and sand where it rests, the stroke sounding in the hue at the needle's end */
 static void F(draw)(toy_t *t)
 {
     int period = SV_SWELL[P(SWELL)], at = toy_now(t) % period, i, every = P(TREMBLE) >= 5 ? 1 : 2;
+    int rise = (at < period / 2 ? at : period - 1 - at) * 2000 / period, w = 50 + P(OPEN) * 3;
+    pic_circle(PIC_CX, PIC_CY, 64, K_SAND);
+    pic_needle(PIC_CX, PIC_CY, 58, at, period, t->playing ? K_SOFT : K_LINE);
     for (i = 0; i < period; i++) {
-        int x = 12 + i * 216 / period, h = 6 + 90 * (i < period / 2 ? i : period - 1 - i) * 2 / period;
-        int w = 216 / period - 2;
-        uint16_t c = i == at && t->playing ? pic_hue : i % every ? K_SAND : K_TEXT;
-        cv_rect(x, 120 - h, w < 2 ? 2 : w, h, c);
+        int cur = i == at && t->playing;
+        pic_pt(PIC_CX, PIC_CY, 58, i, period, cur ? 4 : i % every ? 0 : 2, cur ? pic_hue : i % every ? K_SAND : K_TEXT);
     }
-    cv_rect(12, 130, 216 * (2 + P(OPEN) * 4 / 10) / 6, 3, K_SOFT);
+    pic_disc(PIC_CX, PIC_CY, 42, K_BG);
+    pic_spire(PIC_CX, PIC_CY + 34, w, 68, t->playing ? rise : 0, K_TEXT, pic_hue);
+    pic_rune(PIC_CX - 4, PIC_CY + 38, RUNE_WAVE, K_SOFT);
 }
 #endif
 

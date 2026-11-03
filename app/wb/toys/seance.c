@@ -73,21 +73,33 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the five voicings as little stacks of notes, the one sounding lit, the chances of
- * going from it to each other as lines of weight */
+/* the picture: the five voicings as the five points of a pentagram, each an orb that fills with the
+ * chance of going there next; the one sounding in the hue, and its notes stacked as bars at the
+ * centre, swelling as the chord is struck */
 static void F(draw)(toy_t *t)
 {
     seance_t *s = ST(seance_t);
-    static const char *const NAME[5] = {"CLOSE", "OPEN", "WIDE", "CLSTR", "FIFTH"};
-    int b, k;
+    int b, k, cx = PIC_CX, cy = PIC_CY, w[SE_N], top = 1, hot = pic_ago(t, -1) < 200u;
     for (b = 0; b < SE_N; b++) {
-        int x = pic_col(b, SE_N, 16), w = s->table[s->last][b] + (b == s->last ? P(STICKY) * 2 : 0);
-        cv_rect(x - 1, 100, 3, 0 + w * 2, b == s->last ? pic_hue : K_LINE);
-        for (k = 0; k < 4; k++)
-            if (SE_VOICING[b][k] != 99)
-                cv_rect(x - 10, 90 - (SE_VOICING[b][k] + 7) * 3, 20, 2, b == s->last ? pic_hue : K_TEXT);
-        cv_text(x - 16, 124, &FONT_XS, NAME[b], b == s->last ? K_TEXT : K_DIM);
+        w[b] = s->table[s->last][b] + (b == s->last ? P(STICKY) * 2 : 0);
+        if (b >= 3)
+            w[b] = w[b] * P(CLUSTERS) / 10;
+        if (w[b] > top)
+            top = w[b];
     }
+    pic_seal(cx, cy, 64, SE_N, 2, K_SAND);
+    for (b = 0; b < SE_N; b++)
+        if (b != s->last)
+            pic_chord(cx, cy, 48, s->last, b, SE_N, w[b] * 3 >= top ? K_SOFT : K_LINE);
+    for (b = 0; b < SE_N; b++) {
+        int a = pic_ang(b, SE_N), x = pic_px(cx, 48, a), y = pic_py(cy, 48, a), on = b == s->last;
+        pic_disc(x, y, 10, K_BG);
+        pic_orb(x, y, on ? (hot ? 10 : 9) : 8, w[b] * 1000 / top, on ? pic_hue : K_SAND, on ? pic_hue : K_SOFT);
+    }
+    pic_disc(cx, cy, 16, K_BG);
+    for (k = 0; k < 4; k++)
+        if (SE_VOICING[s->last][k] != 99)
+            cv_rect(cx - (hot ? 10 : 8), cy + 10 - (SE_VOICING[s->last][k] + 7) * 20 / 21, hot ? 20 : 16, 2, hot ? pic_hue : K_TEXT);
 }
 #endif
 

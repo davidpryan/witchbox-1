@@ -62,19 +62,22 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the map's recent values as dots across the screen, so a steady note is one line,
- * a flip is two, four lines four, and chaos a scatter; the knob's place on the way to chaos below */
+/* the picture: the map's recent values as points round a ring, x as the angle, so a steady note is
+ * one point, a flip two across from each other, four lines four, and chaos a scatter; the newest in
+ * the hue; the orb at the centre fills on the way to chaos */
 static void F(draw)(toy_t *t)
 {
     hysteria_t *s = ST(hysteria_t);
-    int i;
+    int i, cx = PIC_CX, cy = PIC_CY, last = (s->hp + HY_HIST - 1) % HY_HIST;
+    pic_seal(cx, cy, 64, 4, 0, K_SAND);
     for (i = 0; i < HY_HIST; i++) {
-        int v = s->xs[(s->hp + i) % HY_HIST], x = 12 + i * 216 / HY_HIST, y = 118 - v * 100 / 4096;
-        pic_disc(x, y, i == HY_HIST - 1 ? 4 : 2, i == HY_HIST - 1 ? pic_hue : K_TEXT);
+        int k = (s->hp + i) % HY_HIST, a = s->xs[k] * 32 / 4096, age = HY_HIST - 1 - i;
+        int x = pic_px(cx, 50, a), y = pic_py(cy, 50, a);
+        if (k == last)
+            cv_line(cx, cy, x, y, K_LINE);
+        pic_disc(x, y, k == last ? 5 : age < 6 ? 3 : 2, k == last ? pic_hue : age < 6 ? K_TEXT : K_SOFT);
     }
-    cv_rect(12, 130, 216, 2, K_PANEL);
-    cv_rect(12, 128, P(CHAOS) * 216 / 10, 6, pic_hue);
-    cv_text(12, 4, &FONT_XS, "X", K_DIM);
+    pic_orb(cx, cy, 18, P(CHAOS) * 100, K_SAND, pic_ago(t, -1) < 120u ? pic_hue : K_SOFT);
 }
 #endif
 

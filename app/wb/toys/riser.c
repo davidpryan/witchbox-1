@@ -104,29 +104,29 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a ramp of slats that fills from the left as the riser climbs, the last of them in
- * colour; at the impact a square frame bursts out round it and fades */
+/* the picture: the riser as a spire that fills from its base as the sweep climbs, the top of the
+ * climb in the hue; at the impact rings burst out round it and fade; a rune for what rises at its
+ * foot inside a ring, and the phrase's bars as a strip beneath, the bar now taller and lit while it climbs */
 static void F(draw)(toy_t *t)
 {
     riser_t *s = ST(riser_t);
-    static const uint8_t GROW[4] = {4, 9, 14, 18};
-    int k, x0 = 30, base = 126;
-    for (k = 0; k < 60; k++) {
-        int h = 3 + 87 * (k + 1) / 60;
-        uint16_t c = k < s->full ? (k >= 45 ? pic_hue : K_TEXT) : K_SAND;
-        cv_rect(x0 + 3 * k, base - h, 2, h, c);
+    int cx = PIC_CX, every = RI_EVERY[P(EVERY)], bar = toy_bar(t) % every, fill = s->full * 1000 / RI_N, j;
+    pic_circle(cx, 66, 60, K_SAND);
+    pic_spire(cx, 108, 96, 84, imin(fill, 750), K_TEXT, K_TEXT);
+    for (j = 84 * 750 / 1000; j < 84 * fill / 1000; j++) {
+        int ww = 96 * (84 - j) / 84;
+        cv_rect(cx - ww / 2, 108 - j, ww, 1, pic_hue);
     }
     if (s->burst) {
-        int kk = s->burst / (60 + P(IMPACT) * 8), m, x, y, w, h;
-        uint16_t c;
-        if (kk < 4) {
-            m = GROW[kk];
-            c = kk == 0 ? pic_hue : kk == 1 ? K_TEXT : kk == 2 ? K_SOFT : K_SAND;
-            x = x0 - m; y = base - 90 - m; w = 180 + 2 * m; h = 90 + 2 * m;
-            cv_rect(x, y, w, 2, c); cv_rect(x, y + h - 2, w, 2, c);
-            cv_rect(x, y, 2, h, c); cv_rect(x + w - 2, y, 2, h, c);
-        }
+        int kk = s->burst / (60 + P(IMPACT) * 8);
+        if (kk < 4)
+            pic_circle(cx, 66, 44 + kk * 8, kk == 0 ? pic_hue : kk == 1 ? K_TEXT : kk == 2 ? K_SOFT : K_SAND);
     }
+    if (P(KIND) != 1)
+        pic_rune(cx - (P(KIND) == 2 ? 12 : 4), 112, RUNE_NOISE, s->ms >= 0 ? pic_hue : K_SOFT);
+    if (P(KIND))
+        pic_rune(cx + (P(KIND) == 2 ? 4 : -4), 112, RUNE_UP, s->ms >= 0 ? pic_hue : K_SOFT);
+    pic_strip(132, every, 1u << bar, bar, s->ms >= 0 ? pic_hue : K_TEXT);
 }
 #endif
 

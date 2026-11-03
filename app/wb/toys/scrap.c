@@ -59,24 +59,30 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: three gears, tin, glass and wood, one tooth per step of its cycle, turning as the
- * clock goes; a gear flashes when its tooth strikes */
+/* the picture: three interlocking seals, tin, glass and wood, one point per step of its cycle and a
+ * needle going round it; the point struck swells in the hue, and the loose part rattles as a cross
+ * rune at the foot */
 static void F(draw)(toy_t *t)
 {
     scrap_t *s = ST(scrap_t);
-    static const uint8_t X[3] = {42, 120, 198};
+    static const uint8_t X[3] = {52, 120, 188};
     int m;
     for (m = 0; m < 3; m++) {
-        int period = P(m), r = 14 + period * 2, i, at = (toy_now(t) + s->off[m]) % period, k;
-        uint16_t c = pic_ago(t, m) < 110u ? pic_hue : K_TEXT;
-        if (P(MESH) == 2) period = period * 3 / 2;
-        for (i = 0; i < period; i++) {
-            int a = (i * 32 / period - at * 32 / period + 24) & 31;
-            pic_disc(X[m] + (r + 4) * PIC_SIN[a] / 100, 72 - (r + 4) * PIC_SIN[(a + 8) & 31] / 100, 2, i == 0 ? pic_hue : c);
-        }
-        pic_ring(X[m], 72, r, r - 4, c);
-        for (k = 0; k < 2; k++) (void)k;
+        int period = P(m), at, i, hit = pic_ago(t, m) < 110u;
+        if (P(MESH) == 2)
+            period = period * 3 / 2;
+        if (period < 2)
+            period = 2;
+        at = (P(MESH) == 1 ? toy_now(t) % BAR : toy_now(t) + s->off[m]) % period;
+        pic_circle(X[m], 68, 40, K_SAND);
+        pic_circle(X[m], 68, 34, hit ? pic_hue : K_SAND);
+        pic_needle(X[m], 68, 28, at, period, t->playing ? (hit ? pic_hue : K_TEXT) : K_LINE);
+        for (i = 0; i < period; i++)
+            pic_pt(X[m], 68, 28, i, period, i == 0 ? 3 : 2, i == 0 ? (hit ? pic_hue : K_TEXT) : i == at ? K_TEXT : K_SOFT);
+        pic_rune(X[m] - 4, 118, m == 0 ? RUNE_PERC : m == 1 ? RUNE_HAT : RUNE_KICK, hit ? pic_hue : K_SAND);
     }
+    if (pic_ago(t, 3) < 150u)
+        pic_rune(PIC_CX - 4, 2, RUNE_CROSS, K_TEXT);
 }
 #endif
 

@@ -92,15 +92,20 @@ static void F(frame)(toy_t *t, int ms)
 }
 
 #ifdef WB_PICTURES
-/* the picture: a mouth, shut between phrases, that opens wide for a phrase (wider for a longer one),
- * in colour, and drifts up and down with the notes it sings */
+/* the picture: the voice as an orb inside a seal, shut to a ring between phrases, that fills in the
+ * hue as a phrase opens (fuller for a longer one) and drifts up and down with the notes it sings;
+ * the notes still to come as cream points at the top of the ring, a voice rune at its foot */
 static void F(draw)(toy_t *t)
 {
     ghost_t *s = ST(ghost_t);
-    int h = s->h * 3 / 4, y = (s->y - 26) * 3 / 4 - h / 2, w = 63, r = imin(7, h / 2);
-    pic_rrect(120 - w / 2, y, w, h, r, s->open ? pic_hue : K_TEXT);
-    if (h >= 18)
-        pic_rrect(120 - w / 2 + 9, y + 6, w - 18, h - 12, imin(4, (h - 12) / 2), K_BG);
+    int cy = (s->y - 26) * 3 / 4, fill = imax(0, imin(1000, (s->h - 10) * 1000 / 60)), i;
+    pic_seal(PIC_CX, PIC_CY, 64, 0, 0, K_SAND);
+    pic_orb(PIC_CX, cy, 30, fill, s->open ? pic_hue : K_TEXT, pic_hue);
+    pic_rune(PIC_CX - 4, PIC_CY + 42, RUNE_VOICE, s->open ? K_TEXT : K_SOFT);
+    for (i = 0; i < s->ntodo; i++) {
+        int a = (2 * i - (s->ntodo - 1)) & 31;
+        pic_disc(pic_px(PIC_CX, 58, a), pic_py(PIC_CY, 58, a), 2, K_TEXT);
+    }
 }
 #endif
 

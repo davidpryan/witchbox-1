@@ -56,31 +56,32 @@ static void F(on_step)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: rain streaks that fall harder with Rain, the wind as lines that lean with it, a flash
- * at the thunder, and a gust that sweeps across */
+/* the picture: four orbs on a seal, the rain's and the wind's filling while their sheets blow through
+ * and draining after, the thunder's flashing the whole seal cream, the gust's a needle that sweeps
+ * round; a rune under each names it, and the rain's points drift round the outer ring */
 static void F(draw)(toy_t *t)
 {
-    uint32_t now = plat_ms(), ago_t = pic_ago(t, 2), ago_g = pic_ago(t, 3), i;
-    int n = P(RAIN) * 6, lean = P(WIND);
-    if (ago_t < 120u)
-        cv_rect(0, 0, 240, 144, K_PANEL);
-    for (i = 0; i < (uint32_t)n; i++) {
-        uint32_t h = pic_hash(i, 0);
-        int x = (int)(h % 240u), y = (int)((h / 240u + now / 6u) % 150u) - 6;
-        cv_line(x, y, x - lean / 2, y + 8, K_SOFT);
+    storm_t *s = ST(storm_t);
+    static const uint8_t RUNES[4] = {RUNE_DOWN, RUNE_WAVE, RUNE_CROSS, RUNE_NOISE};
+    uint32_t now = plat_ms(), ago_t = pic_ago(t, 2), ago_g = pic_ago(t, 3);
+    int v, flash = ago_t < 150u, fill[4];
+    fill[0] = s->rain_left * 1000 / 8;
+    fill[1] = s->wind_left * 1000 / BAR;
+    fill[2] = ago_t < 2000u ? (int)(2000u - ago_t) / 2 : 0;
+    fill[3] = ago_g < 600u ? (int)(600u - ago_g) * 10 / 6 : 0;
+    pic_circle(PIC_CX, PIC_CY, 64, flash ? K_TEXT : K_SAND);
+    pic_circle(PIC_CX, PIC_CY, 58, flash ? K_TEXT : K_SAND);
+    for (v = 0; v < P(RAIN) * 2; v++)
+        pic_pt(PIC_CX, PIC_CY, 61, (int)(now / 90u) + v * 32 / imax(1, P(RAIN) * 2), 32, 0, K_SOFT);
+    if (ago_g < 600u)
+        pic_needle(PIC_CX, PIC_CY, 56, (int)(ago_g * 32u / 600u), 32, pic_hue);
+    for (v = 0; v < 4; v++) {
+        int x = pic_px(PIC_CX, 36, v * 8 + 4), y = pic_py(PIC_CY, 36, v * 8 + 4);
+        pic_orb(x, y, 15, fill[v], flash ? K_TEXT : K_SOFT, v == 2 ? K_TEXT : pic_hue);
+        pic_rune(x - 4, y + 18, RUNES[v], fill[v] ? K_TEXT : K_SAND);
     }
-    for (i = 0; i < (uint32_t)lean; i++) {
-        uint32_t h = pic_hash(i, 1);
-        int y = (int)(h % 130u) + 6, x = (int)((h / 130u + now / 4u) % 260u) - 10;
-        cv_rect(x, y, 10 + lean, 1, K_SAND);
-    }
-    if (ago_g < 600u) {
-        int x = (int)(ago_g * 300u / 600u) - 30;
-        cv_rect(x, 60, 30, 2, pic_hue);
-        cv_rect(x + 8, 68, 22, 2, pic_hue);
-    }
-    if (ago_t < 120u)
-        cv_line(120, 0, 100, 60, K_TEXT), cv_line(100, 60, 116, 70, K_TEXT), cv_line(116, 70, 98, 144, K_TEXT);
+    if (flash)
+        pic_disc(PIC_CX, PIC_CY, 6, K_TEXT);
 }
 #endif
 

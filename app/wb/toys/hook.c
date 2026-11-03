@@ -124,22 +124,35 @@ static void F(play_changed)(toy_t *t)
 }
 
 #ifdef WB_PICTURES
-/* the picture: the riff as a two-bar roll, a bar per note as long as it is held; the fourth pass's
- * changed notes in colour; a sweep line on the step; four pips for the passes */
+/* the picture: the two-bar riff as a figure on a wheel of thirty-two: a point a note, as far out
+ * as it is high, the notes joined in order; the fourth pass's changed notes in the hue; the needle
+ * on the step, and four small points round the middle for the passes, the one playing lit */
 static void F(draw)(toy_t *t)
 {
     hook_t *s = ST(hook_t);
-    int st, top = HK_REACH[P(REACH)], now = t->steps % HK_LEN, i;
+    int st, top = HK_REACH[P(REACH)], now = t->steps % HK_LEN, i, cx = PIC_CX, cy = PIC_CY, last = -1;
+    pic_seal(cx, cy, 64, HK_LEN, 0, K_SAND);
     for (st = 0; st < HK_LEN; st++) {
         int n = s->alt[st] >= 0 ? s->alt[st] : s->riff[st];
         if (n < 0)
             continue;
-        cv_rect(4 + st * 7, 118 - n * 100 / top, s->hold[st] * 7 - 2, 4, s->alt[st] >= 0 ? pic_hue : K_TEXT);
+        if (last >= 0) {
+            int a = pic_ang(last, HK_LEN), b = pic_ang(st, HK_LEN), m = s->alt[last] >= 0 ? s->alt[last] : s->riff[last];
+            cv_line(pic_px(cx, 24 + m * 30 / top, a), pic_py(cy, 24 + m * 30 / top, a), pic_px(cx, 24 + n * 30 / top, b), pic_py(cy, 24 + n * 30 / top, b), K_LINE);
+        }
+        last = st;
     }
     if (t->playing)
-        cv_rect(4 + now * 7, 6, 2, 118, pic_hue);
+        pic_needle(cx, cy, 56, now, HK_LEN, K_SOFT);
+    for (st = 0; st < HK_LEN; st++) {
+        int n = s->alt[st] >= 0 ? s->alt[st] : s->riff[st];
+        if (n < 0)
+            pic_pt(cx, cy, 58, st, HK_LEN, 0, K_SAND);
+        else
+            pic_pt(cx, cy, 24 + n * 30 / top, st, HK_LEN, st == now && t->playing ? 4 : s->hold[st] > 1 ? 3 : 2, s->alt[st] >= 0 ? pic_hue : K_TEXT);
+    }
     for (i = 0; i < 4; i++)
-        cv_rect(100 + i * 11, 134, 8, 5, i == s->pass && t->playing ? pic_hue : K_SAND);
+        pic_pt(cx, cy, 8, i, 4, 1, i == s->pass && t->playing ? pic_hue : K_SAND);
 }
 #endif
 
