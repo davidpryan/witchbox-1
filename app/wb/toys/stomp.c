@@ -55,9 +55,27 @@ static void F(frame)(toy_t *t, int ms)
         s->ring = imax(0, s->ring - ms);
 }
 
-TOY(toy_stomp, "stomp", "Slow Stomp", "vee", ROLE_DRUMS, HUE_PURPLE, 40, 0,
-    "A half-speed beat: a long boom of a kick, then a huge clap.",
-    stomp_t, F(make), 0, 0, F(randomise), F(on_step), 0, F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a disc that swells with the kick's boom, and a square frame that runs out with the clap's tail */
+static void F(draw)(toy_t *t)
+{
+    stomp_t *s = ST(stomp_t);
+    static const uint8_t RING[4] = {42, 48, 54, 60};
+    int r = 20, cx = 120, cy = 72;
+    if (s->boom)
+        r += 12 * s->boom / (120 + P(WEIGHT) * 70);
+    if (s->ring) {
+        int k = RING[imin(3, s->ring * 4 / (150 + P(TAIL) * 160))];
+        cv_rect(cx - k, cy - k, 2 * k, 3, pic_hue);
+        cv_rect(cx - k, cy + k - 3, 2 * k, 3, pic_hue);
+        cv_rect(cx - k, cy - k, 3, 2 * k, pic_hue);
+        cv_rect(cx + k - 3, cy - k, 3, 2 * k, pic_hue);
+    }
+    pic_disc(cx, cy, r, K_TEXT);
+}
+#endif
+
+TOY(toy_stomp, "stomp", "Slow Stomp", "vee", ROLE_DRUMS, HUE_PURPLE, 40, 0, "A half-speed beat: a long boom of a kick, then a huge clap.", stomp_t, F(make), 0, 0, F(randomise), F(on_step), 0, F(frame), PIC(F(draw)), 0);
 #undef WEIGHT
 #undef TAIL
 #undef DOUBLES

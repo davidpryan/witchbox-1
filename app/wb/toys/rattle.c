@@ -67,9 +67,30 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_rattle, "rattle", "Rattlebones", "bones", ROLE_DRUMS, HUE_YELLOW, 0, 2,
-    "Dry wooden notes in short figures that turn against the beat.",
-    rattle_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the figure as a row of bones, one a note, at its height above or below the root; the
+ * one being struck lit (and its strokes counted); then a bar of silence that empties */
+static void F(draw)(toy_t *t)
+{
+    rattle_t *s = ST(rattle_t);
+    static const uint8_t LEN[3] = {3, 5, 7};
+    int n = LEN[P(FIGURE)], i, k;
+    for (i = 0; i < n; i++) {
+        int x = pic_col(i, n, 30), y = 72 - s->fig[i] * 7, cur = i == s->at && s->rest == 0 && t->playing;
+        uint16_t c = cur ? pic_hue : K_TEXT;
+        cv_rect(x - 10, y - 2, 20, 4, c);
+        pic_disc(x - 10, y - 3, 3, c); pic_disc(x - 10, y + 3, 3, c);
+        pic_disc(x + 10, y - 3, 3, c); pic_disc(x + 10, y + 3, 3, c);
+        if (cur)
+            for (k = 0; k < P(STROKES); k++)
+                cv_rect(x - 8 + k * 5, y + 12, 3, 3, k < P(STROKES) - s->left ? pic_hue : K_SAND);
+    }
+    if (s->rest > 0)
+        cv_rect(20, 128, s->rest * 200 / imax(1, P(REST) * 2 + 2), 3, K_SAND);
+}
+#endif
+
+TOY(toy_rattle, "rattle", "Rattlebones", "bones", ROLE_DRUMS, HUE_YELLOW, 0, 2, "Dry wooden notes in short figures that turn against the beat.", rattle_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef FIGURE
 #undef STROKES
 #undef REST

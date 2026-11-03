@@ -4,6 +4,7 @@
  * (wb/), the band (band.c), the project (project.c), the UI (ui.c) and the engine (dsp/wb_engine.c, its own
  * -O2 unit). */
 #include "app.h"
+#define WB_PICTURES                      /* the toys draw their pictures (wb/toys/pic.h) */
 #include "wb/dice.c"
 #include "wb/settings.c"
 #include "wb/toy.c"

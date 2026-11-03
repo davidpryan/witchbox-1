@@ -1,0 +1,170 @@
+# Every toy's picture: all eighty toys through the seat on screen while the band plays, drawn every frame
+wait 100
+tap PLAY
+wait 300
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+shot pic20.png
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+shot pic40.png
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+shot pic60.png
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+spin ALGO 1
+wait 350
+shot pic80.png
+expect playing 1
+expect notes >100

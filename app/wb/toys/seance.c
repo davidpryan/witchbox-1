@@ -72,9 +72,26 @@ static void F(on_step)(toy_t *t)
             toy_note(t, root + SE_VOICING[next][k], 0, hold);
 }
 
-TOY(toy_seance, "seance", "Seance", "pad", ROLE_CHORDS, HUE_PURPLE, 0, 3,
-    "A glass pad whose voicing — close, open, wide, a cluster, a bare fifth — is chosen each bar by a chain of chances.",
-    seance_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the five voicings as little stacks of notes, the one sounding lit, the chances of
+ * going from it to each other as lines of weight */
+static void F(draw)(toy_t *t)
+{
+    seance_t *s = ST(seance_t);
+    static const char *const NAME[5] = {"CLOSE", "OPEN", "WIDE", "CLSTR", "FIFTH"};
+    int b, k;
+    for (b = 0; b < SE_N; b++) {
+        int x = pic_col(b, SE_N, 16), w = s->table[s->last][b] + (b == s->last ? P(STICKY) * 2 : 0);
+        cv_rect(x - 1, 100, 3, 0 + w * 2, b == s->last ? pic_hue : K_LINE);
+        for (k = 0; k < 4; k++)
+            if (SE_VOICING[b][k] != 99)
+                cv_rect(x - 10, 90 - (SE_VOICING[b][k] + 7) * 3, 20, 2, b == s->last ? pic_hue : K_TEXT);
+        cv_text(x - 16, 124, &FONT_XS, NAME[b], b == s->last ? K_TEXT : K_DIM);
+    }
+}
+#endif
+
+TOY(toy_seance, "seance", "Seance", "pad", ROLE_CHORDS, HUE_PURPLE, 0, 3, "A glass pad whose voicing — close, open, wide, a cluster, a bare fifth — is chosen each bar by a chain of chances.", seance_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef STICKY
 #undef RATE
 #undef LATE

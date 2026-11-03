@@ -87,9 +87,28 @@ static void F(on_step)(toy_t *t)
     s->at++;
 }
 
-TOY(toy_lichen, "lichen", "Lichen", "lichen", ROLE_CHORDS, HUE_GO, 0, 3,
-    "An L-system grows the rhythm: long and short organ chords rewritten over and over, like lichen spreading.",
-    lichen_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the grown string as a row of blocks, long and short, wrapping into lines like lichen
+ * spreading; the note sounding lit */
+static void F(draw)(toy_t *t)
+{
+    lichen_t *s = ST(lichen_t);
+    int i, x = 8, y = 10;
+    for (i = 0; i < s->n; i++) {
+        int w = s->len[i] * 5 + 2;
+        if (x + w > 232) {
+            x = 8;
+            y += 14;
+            if (y > 126)
+                break;
+        }
+        cv_rect(x, y, w, 10, i == s->at - 1 || (s->at == 0 && i == s->n - 1) ? (t->playing ? pic_hue : K_TEXT) : K_TEXT);
+        x += w + 3;
+    }
+}
+#endif
+
+TOY(toy_lichen, "lichen", "Lichen", "lichen", ROLE_CHORDS, HUE_GO, 0, 3, "An L-system grows the rhythm: long and short organ chords rewritten over and over, like lichen spreading.", lichen_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef GENERATIONS
 #undef RULE
 #undef HOLD

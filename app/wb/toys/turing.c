@@ -66,9 +66,27 @@ static void F(on_step)(toy_t *t)
     s->at++;
 }
 
-TOY(toy_turing, "turing", "Turing Drums", "bits", ROLE_DRUMS, HUE_CYAN, 0, 3,
-    "A shift register goes round and three drums read it. Each bit may flip as it passes: locked, evolving, or new.",
-    turing_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the register as a ring of bits, lit where set, the read head on the bit coming up
+ * and the drums' taps marked round the ring */
+static void F(draw)(toy_t *t)
+{
+    turing_t *s = ST(turing_t);
+    static const uint8_t LEN[4] = {4, 8, 12, 16};
+    int len = LEN[P(LENGTH)], i, v, cx = 120, cy = 72;
+    for (i = 0; i < len; i++) {
+        int a = (i * 32 / len) & 31, x = cx + 50 * PIC_SIN[a] / 100, y = cy - 50 * PIC_SIN[(a + 8) & 31] / 100;
+        int on = (s->reg >> i) & 1u, head = i == s->at % len;
+        pic_disc(x, y, on ? 5 : 2, head ? pic_hue : on ? K_TEXT : K_SAND);
+    }
+    for (v = 0; v < P(VOICES); v++) {
+        int tap = (s->at % len + v * len / 4) % len, a = (tap * 32 / len) & 31;
+        pic_disc(cx + 62 * PIC_SIN[a] / 100, cy - 62 * PIC_SIN[(a + 8) & 31] / 100, 2, pic_ago(t, v) < 120u ? pic_hue : K_SOFT);
+    }
+}
+#endif
+
+TOY(toy_turing, "turing", "Turing Drums", "bits", ROLE_DRUMS, HUE_CYAN, 0, 3, "A shift register goes round and three drums read it. Each bit may flip as it passes: locked, evolving, or new.", turing_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef CHANGE
 #undef LENGTH
 #undef VOICES

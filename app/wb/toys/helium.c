@@ -69,9 +69,24 @@ static void F(on_step)(toy_t *t)
     toy_note(t, deg, 0, t->step_ms * 3 / 2);
 }
 
-TOY(toy_helium, "helium", "Helium", "balloon", ROLE_LEAD, HUE_PINK, 0, 2,
-    "A squeaky, pitched-up voice singing a quick phrase and its answer.",
-    helium_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a balloon that rises with every note of the phrase and sinks back in the gap; the
+ * call on the left, its answer on the right */
+static void F(draw)(toy_t *t)
+{
+    int gap = HE_GAP[P(GAP)], at = toy_now(t) % (gap * 2), answer = at >= gap, x = answer ? 168 : 72, y;
+    uint32_t ago = pic_ago(t, -1);
+    int lift = ago < 2000u ? (int)(2000u - ago) * 40 / 2000 : 0;
+    y = 96 - lift;
+    cv_line(x, y + 14, x + 2, y + 40, K_SOFT);
+    pic_disc(x, y, 14, ago < 150u ? pic_hue : K_TEXT);
+    pic_disc(x - 5, y - 5, 2, K_BG);
+    cv_text(60, 124, &FONT_XS, "CALL", answer ? K_DIM : K_SOFT);
+    cv_text(150, 124, &FONT_XS, "ANSWER", answer ? K_SOFT : K_DIM);
+}
+#endif
+
+TOY(toy_helium, "helium", "Helium", "balloon", ROLE_LEAD, HUE_PINK, 0, 2, "A squeaky, pitched-up voice singing a quick phrase and its answer.", helium_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef PHRASE
 #undef ANSWER
 #undef GAP

@@ -81,9 +81,27 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_gate, "gate", "Stutter Gate", "comb", ROLE_CHORDS, HUE_CYAN, 30, 0,
-    "The chord chopped into a rhythm of evenly spread hits.",
-    gate_t, F(make), F(length), F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a row of shutters, one a step of the pattern; a tab under each step that hits; the
+ * shutter the chord shows through stands open, in colour */
+static void F(draw)(toy_t *t)
+{
+    gate_t *s = ST(gate_t);
+    int n = imax(1, imin(32, P(COUNT))), i, w = (228 - n * 2) / n, now = t->pos % n;
+    for (i = 0; i < n; i++) {
+        int x = 6 + i * (w + 2);
+        if (i == s->open)
+            cv_rect(x, 26, w, 70, pic_hue);
+        else
+            cv_rect(x, 18, w, 86, K_TEXT);
+        if (s->pat[i])
+            cv_rect(x, 110, w, 4, pic_hue);
+        pic_marker(x + w / 2, w, i == now && t->playing);
+    }
+}
+#endif
+
+TOY(toy_gate, "gate", "Stutter Gate", "comb", ROLE_CHORDS, HUE_CYAN, 30, 0, "The chord chopped into a rhythm of evenly spread hits.", gate_t, F(make), F(length), F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef HITS
 #undef COUNT
 #undef ROTATE

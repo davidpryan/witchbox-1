@@ -66,9 +66,25 @@ static void F(on_step)(toy_t *t)
     toy_note(t, deg, 0, t->step_ms * CW_HOLD[P(HOLD)] - 10);
 }
 
-TOY(toy_coldwave, "coldwave", "Cold Wave", "wave", ROLE_BASS, HUE_CYAN, 0, 2,
-    "A hard, metallic bass repeating one rigid pattern, with octave jumps.",
-    coldwave_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the rigid pattern as two rows of sixteen cells, the root's row and the octave's, a cell
+ * filled where the bass hits; the step sounding in colour */
+static void F(draw)(toy_t *t)
+{
+    coldwave_t *s = ST(coldwave_t);
+    int i, now = t->steps % BAR;
+    for (i = 0; i < BAR; i++) {
+        int x = 8 + i * 14, up = i % 2 == 1 && s->jump[i] < P(JUMPS);
+        cv_rect(x, 44, 11, 28, K_PANEL);
+        cv_rect(x, 80, 11, 28, K_PANEL);
+        if (s->on[i])
+            cv_rect(x, up ? 44 : 80, 11, 28, i == now && t->playing ? pic_hue : K_TEXT);
+    }
+    pic_bar(t->steps, BAR);
+}
+#endif
+
+TOY(toy_coldwave, "coldwave", "Cold Wave", "wave", ROLE_BASS, HUE_CYAN, 0, 2, "A hard, metallic bass repeating one rigid pattern, with octave jumps.", coldwave_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef DENSITY
 #undef JUMPS
 #undef DROPS

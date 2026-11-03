@@ -63,9 +63,39 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_cathedral, "cathedral", "Cathedral", "arch", ROLE_CHORDS, HUE_PURPLE, 40, 0,
-    "Slow choir and organ chords that fade in and ring on over each other.",
-    cathedral_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* rows ya..yb of an arch (a round top of radius r at `top`, then straight) in colour c */
+static void F(slab)(int x, int w, int top, int r, int ya, int yb, uint16_t c)
+{
+    int y;
+    for (y = ya; y < yb; y++) {
+        int dx = 0;
+        if (y < top + r) {                      /* inside the round top: how far in this row starts */
+            int dy = r - (y - top), q = 0;
+            while (q < r && (q + 1) * (q + 1) + dy * dy <= r * r) q++;
+            dx = r - q;
+        }
+        cv_rect(x + dx, y, w - 2 * dx, 1, c);
+    }
+}
+
+/* the picture: a row of arches, one a voice, each filling from the floor as its chord fades in and
+ * draining as it rings out */
+static void F(draw)(toy_t *t)
+{
+    cathedral_t *s = ST(cathedral_t);
+    int n = 3 + P(HEIGHT), k, w = 160 / n, r = w / 2 - 2, top = 14, h = 110;
+    for (k = 0; k < n; k++) {
+        int x = 40 + k * w + 2, lv = s->lv[k], fill = (h - 6) * lv / 1000;
+        F(slab)(x, w - 4, top, r, top, top + h, K_TEXT);
+        F(slab)(x + 3, w - 10, top + 3, r - 3, top + 3, top + h - 3, K_BG);
+        if (fill > 0)
+            F(slab)(x + 3, w - 10, top + 3, r - 3, top + h - 3 - fill, top + h - 3, pic_hue);
+    }
+}
+#endif
+
+TOY(toy_cathedral, "cathedral", "Cathedral", "arch", ROLE_CHORDS, HUE_PURPLE, 40, 0, "Slow choir and organ chords that fade in and ring on over each other.", cathedral_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef BLEND
 #undef FADE
 #undef RING

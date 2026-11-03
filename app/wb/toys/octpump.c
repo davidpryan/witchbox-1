@@ -69,9 +69,25 @@ static void F(on_step)(toy_t *t)
         toy_note(t, cell == 1 ? toy_root(t, 0) - 7 : toy_root(t, 0), 0, 0);
 }
 
-TOY(toy_octpump, "octpump", "Octave Pump", "oct", ROLE_BASS, HUE_GO, 0, 0,
-    "A buzzing bass that hammers the root and jumps up an octave on the off-beats.",
-    octpump_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: two rows, low and high, a block on every step that sounds; wider with Gate, taller with
+ * Bite; the one sounding now in colour */
+static void F(draw)(toy_t *t)
+{
+    octpump_t *s = ST(octpump_t);
+    int w = 4 + P(GATE) * 10 / 10, h = 9 + P(BITE) * 3 / 2, i;
+    pic_hline(12, 228, 128, K_SAND);
+    pic_hline(12, 228, 62, K_SAND);
+    for (i = 0; i < BAR; i++) {
+        int row = s->cells[i], cy = row == 1 ? 112 : 46;
+        if (!row)
+            continue;
+        cv_rect(12 + i * 13 + (13 - w) / 2, cy - h / 2, w, h, i == s->lit ? pic_hue : K_TEXT);
+    }
+}
+#endif
+
+TOY(toy_octpump, "octpump", "Octave Pump", "oct", ROLE_BASS, HUE_GO, 0, 0, "A buzzing bass that hammers the root and jumps up an octave on the off-beats.", octpump_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef PATTERN
 #undef OCTAVES
 #undef GATE

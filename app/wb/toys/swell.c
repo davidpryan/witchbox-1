@@ -81,9 +81,38 @@ static void F(play_changed)(toy_t *t)
     s->blip = 0;
 }
 
-TOY(toy_swell, "swell", "Swell", "wedge", ROLE_CHORDS, HUE_PINK, 40, 1,
-    "Chords that fade in like a sound played backwards, then cut dead on the downbeat.",
-    swell_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a wedge that grows from nothing as the chord swells, column by column, bent by Curve,
+ * and is wiped at the downbeat; the echoes blink at its far end, smaller each time */
+static void F(draw)(toy_t *t)
+{
+    swell_t *s = ST(swell_t);
+    int cols = 30, i, n, half = 54, x0 = 15, cy = 72;
+    uint16_t c;
+    cv_rect(x0, cy - 1, cols * 7, 2, K_SAND);
+    if (t->playing) {
+        n = s->all ? imin(cols, s->tt * cols / s->all) : 0;
+        c = pic_hue;
+    } else {
+        n = cols;
+        c = K_TEXT;
+    }
+    for (i = 0; i < n; i++) {
+        /* f = ((i + 1) / cols) ^ (1 + curve * 0.35), in integers: (i+1)/cols to a power in 20ths */
+        int f = 1000, q = (i + 1) * 1000 / cols, pw = 20 + P(CURVE) * 7, k;
+        for (k = 0; k < pw / 20; k++) f = f * q / 1000;
+        f = f * (1000 - (pw % 20) * (1000 - q) / 20) / 1000;
+        {
+            int h = imax(1, half * f / 1000);
+            cv_rect(x0 + i * 7, cy - h, 6, 2 * h, c);
+        }
+    }
+    if (s->blip)
+        cv_rect(x0 + (cols - 3) * 7, cy - s->blip * 3 / 4, 20, s->blip * 3 / 2, K_TEXT);
+}
+#endif
+
+TOY(toy_swell, "swell", "Swell", "wedge", ROLE_CHORDS, HUE_PINK, 40, 1, "Chords that fade in like a sound played backwards, then cut dead on the downbeat.", swell_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef SIZE
 #undef EVERY
 #undef CURVE

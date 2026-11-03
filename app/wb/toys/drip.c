@@ -53,9 +53,27 @@ static void F(on_step)(toy_t *t)
     toy_note(t, toy_root(t, 0) + s->deg[i], s->acc[i] * 2 < P(ACCENT) ? 2 : 0, hold);
 }
 
-TOY(toy_drip, "drip", "Acid Drip", "drip", ROLE_BASS, HUE_GO, 0, 2,
-    "A squelching bass line in quick notes that bend into each other.",
-    drip_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the line as drops at each step's height, bigger where accented, joined by the glides
+ * that bend one into the next; the step sounding in colour */
+static void F(draw)(toy_t *t)
+{
+    drip_t *s = ST(drip_t);
+    int i, now = t->steps % BAR, px = -1, py = 0;
+    for (i = 0; i < BAR; i++) {
+        int on = i == 0 || s->rank[i] < P(NOTES), x = 12 + i * 14, y = 110 - (s->deg[i] + 7) * 5;
+        if (!on)
+            continue;
+        if (px >= 0 && P(GLIDE))
+            cv_line(px, py, x, y, K_LINE);
+        pic_disc(x, y, s->acc[i] * 2 < P(ACCENT) ? 4 : 2, i == now && t->playing ? pic_hue : K_TEXT);
+        px = x; py = y;
+    }
+    pic_bar(t->steps, BAR);
+}
+#endif
+
+TOY(toy_drip, "drip", "Acid Drip", "drip", ROLE_BASS, HUE_GO, 0, 2, "A squelching bass line in quick notes that bend into each other.", drip_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef GLIDE
 #undef ACCENT
 #undef NOTES

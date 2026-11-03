@@ -46,9 +46,23 @@ static void F(on_step)(toy_t *t)
     toy_note(t, deg, peak ? 2 : loud ? 0 : 1, t->step_ms * every + 40);
 }
 
-TOY(toy_shiver, "shiver", "Shiver", "strings", ROLE_CHORDS, HUE_CYAN, 0, 2,
-    "Dark strings bowed fast and nervously, swelling up and dying back.",
-    shiver_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the swell as a wedge over the phrase, the bow's strokes as nervous ticks along it, the
+ * one sounding in colour; the voicing opens as it climbs */
+static void F(draw)(toy_t *t)
+{
+    int period = SV_SWELL[P(SWELL)], at = toy_now(t) % period, i, every = P(TREMBLE) >= 5 ? 1 : 2;
+    for (i = 0; i < period; i++) {
+        int x = 12 + i * 216 / period, h = 6 + 90 * (i < period / 2 ? i : period - 1 - i) * 2 / period;
+        int w = 216 / period - 2;
+        uint16_t c = i == at && t->playing ? pic_hue : i % every ? K_SAND : K_TEXT;
+        cv_rect(x, 120 - h, w < 2 ? 2 : w, h, c);
+    }
+    cv_rect(12, 130, 216 * (2 + P(OPEN) * 4 / 10) / 6, 3, K_SOFT);
+}
+#endif
+
+TOY(toy_shiver, "shiver", "Shiver", "strings", ROLE_CHORDS, HUE_CYAN, 0, 2, "Dark strings bowed fast and nervously, swelling up and dying back.", shiver_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef TREMBLE
 #undef SWELL
 #undef OPEN

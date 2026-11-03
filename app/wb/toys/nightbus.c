@@ -113,9 +113,40 @@ static void F(frame)(toy_t *t, int ms)
         s->door = imax(0, s->door - ms);
 }
 
-TOY(toy_nightbus, "nightbus", "Night Bus", "lamp", ROLE_TEXTURE, HUE_BLUE, 40, 1,
-    "The city at night, heard from far off: a hum, passing cars, a siren, a train, a door.",
-    nightbus_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a street at night: a kerb (thicker with Hum), five lamps, headlights crossing the road
+ * near or far, a train's lit windows along the railway, a doorway that lights, a siren in the sky */
+static void F(draw)(toy_t *t)
+{
+    nightbus_t *s = ST(nightbus_t);
+    int kerb = 106, rail = 52, i;
+    cv_rect(0, kerb, 240, 1 + P(HUM) * 2 / 5, K_SAND);
+    cv_rect(0, rail, 240, 1, K_SAND);
+    for (i = 0; i < 5; i++) {
+        int x = pic_col(i, 5, 9);
+        cv_rect(x, kerb - 40, 2, 40, K_TEXT);
+        cv_rect(x, kerb - 42, 10, 2, K_TEXT);
+        cv_rect(x + 6, kerb - 40, 6, 3, K_TEXT);
+    }
+    for (i = 0; i < s->ncars; i++) {
+        int x = s->car_x[i] * 3 / 4, y = (s->car_y[i] - 26) * 3 / 4, far = P(FAR), r = (5 - (far + 1) / 4) * 3 / 4;
+        pic_disc(x, y, r, pic_hue);
+        pic_disc(x + 12, y, r, pic_hue);
+    }
+    if (s->has_train)
+        for (i = 0; i < 5; i++) {
+            int wx = (s->train + i * 14) * 3 / 4;
+            if (wx >= 0 && wx <= 234)
+                cv_rect(wx, rail - 5, 6, 3, K_SOFT);
+        }
+    if (s->door)
+        cv_rect(21, kerb - 16, 8, 16, K_TEXT);
+    if (s->siren && s->flash)
+        pic_disc(196, 21, 2, pic_hue);
+}
+#endif
+
+TOY(toy_nightbus, "nightbus", "Night Bus", "lamp", ROLE_TEXTURE, HUE_BLUE, 40, 1, "The city at night, heard from far off: a hum, passing cars, a siren, a train, a door.", nightbus_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef TRAFFIC
 #undef EVENTS
 #undef FAR

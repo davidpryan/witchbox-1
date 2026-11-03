@@ -114,11 +114,15 @@ progressions, black keys 1–9 the scale. With EDIT held, white keys type the se
 
 - **The top line**: the seat number and its toy, the seed, the tempo. A message appears at the right
   for a moment when something happens (NEW SEED, SAVED, SCALE ...).
-- **The Toy page**: what this seat has played in the last six seconds, scrolling left: a dot per
-  note, higher for higher notes, drums low down. The bar number is at the top left, the step marker
-  along the bottom. MUTED when it is.
-- **The Band page**: the eight seats, each with its toy, seed, volume and a trail of dots for its
-  notes, and the singers: which seat the chords, the lead and the kick are coming from. The seat
+- **The Toy page**: the toy's own picture, the one Playbox drew for it (Two-Step's limping dots on
+  their grid, Undertow's wobbling wave, Snare Rush's roll, the Crackle record turning, Arc's song
+  line ...), and for the forty newer toys a picture of their own mechanism (the Turing register as a
+  ring of bits, the automaton's rows growing, the logistic map's values, the crows on their wire).
+  Each moves with what the toy is doing. MUTED when it is.
+- **The Band page**: the eight seats, each a ghost in its toy's colour (as the Witchbox toys are)
+  that sings when its seat sounds a note and goes pale when the seat is quiet, with its toy, seed,
+  volume and a trail of dots for its notes, and the singers: which seat the chords, the lead and the
+  kick are coming from. The seat
   on screen is highlighted. The top line shows the arrangement (BAND, TAPE or CLOCK) and the bar.
 - **The Tape page**: a lane per seat, a cell per bar: the seat plays in the bars that are on.
   KNOB 1 is the tape's length (4 to 64 bars), KNOB 2 the sixteen-bar window in view; the white

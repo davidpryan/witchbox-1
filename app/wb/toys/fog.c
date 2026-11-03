@@ -59,9 +59,27 @@ static void F(frame)(toy_t *t, int ms)
     S.tone = dull + (bright - dull) * tri / 1000;
 }
 
-TOY(toy_fog, "fog", "Fog", "fog", ROLE_CONDUCTOR, HUE_GREY, 50, 2,
-    "A conductor. Makes the band duller and brighter, like fog rolling in and lifting.",
-    fog_t, F(make), 0, 0, F(randomise), 0, F(play_changed), F(frame), 0, F(close));
+#ifdef WB_PICTURES
+/* the picture: fog as drifting bands that thicken as the band goes duller and thin as it brightens;
+ * the tone as a bar */
+static void F(draw)(toy_t *t)
+{
+    uint32_t now = plat_ms(), i;
+    int thick = 100 - S.tone, n = 4 + thick / 8;
+    (void)t;
+    for (i = 0; i < (uint32_t)n; i++) {
+        uint32_t h = pic_hash(i, 7);
+        int y = 10 + (int)(h % 110u), w = 40 + (int)(h % 120u), x = (int)((h / 110u + now / (8u + i)) % 300u) - 60;
+        cv_rect(x, y, w, 3 + thick / 30, thick > 60 ? K_SOFT : K_SAND);
+    }
+    cv_rect(20, 130, 200, 3, K_PANEL);
+    cv_rect(20, 130, S.tone * 2, 3, pic_hue);
+    cv_text(20, 118, &FONT_XS, "DULL", K_DIM);
+    cv_text(190, 118, &FONT_XS, "BRIGHT", K_DIM);
+}
+#endif
+
+TOY(toy_fog, "fog", "Fog", "fog", ROLE_CONDUCTOR, HUE_GREY, 50, 2, "A conductor. Makes the band duller and brighter, like fog rolling in and lifting.", fog_t, F(make), 0, 0, F(randomise), 0, F(play_changed), F(frame), PIC(F(draw)), F(close));
 #undef DEPTH
 #undef ROLL
 #undef LIFT

@@ -10,7 +10,7 @@ static const uint8_t SR_STOPS[4] = {0, 16, 8, 4};
 static const uint8_t SR_TIME[3] = {4, 8, 16};
 static const char *const SR_STOPS_N[4] = {"Never", "16 bars", "8 bars", "4 bars"};
 static const char *const SR_TIME_N[3] = {"1 beat", "2 beats", "1 bar"};
-typedef struct { int state, tt, len, armed, drift; } screw_t;
+typedef struct { int state, tt, len, armed, drift, turn; } screw_t;   /* turn: the picture's reel, in 1024ths of a turn */
 #define DRAG 0
 #define STOPS 1
 #define TIME 2
@@ -115,11 +115,32 @@ static void F(frame)(toy_t *t, int ms)
         }
         S.speed = imax(0, speed);
     }
+    s->turn = (s->turn + ms * S.speed * 3 / 100) & 1023;      /* the picture's reel: a turn every 3.4 s at full speed */
 }
 
-TOY(toy_screw, "screw", "Screw", "reel", ROLE_CONDUCTOR, HUE_PURPLE, 40, 1,
-    "Slows the whole band and drops its pitch, and stops the tape dead every so often.",
-    screw_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, F(close));
+#ifdef WB_PICTURES
+/* the picture: a reel with twelve rim dots and three spokes that turn at the band's speed, white
+ * at full speed and purple as it drags or stops; the speed written under */
+static void F(draw)(toy_t *t)
+{
+    screw_t *s = ST(screw_t);
+    int i, v = S.speed, cx = 120, cy = 60;
+    uint16_t c = v >= 95 ? K_TEXT : v >= 70 ? K_SOFT : pic_hue;
+    char b[8];
+    for (i = 0; i < 12; i++)
+        pic_disc(cx + 48 * PIC_SIN[(i * 32 / 12) & 31] / 100, cy - 48 * PIC_SIN[(i * 32 / 12 + 8) & 31] / 100, 2, K_TEXT);
+    pic_disc(cx, cy, 7, K_TEXT);
+    for (i = 0; i < 3; i++) {
+        int a = (s->turn / 32 + i * 32 / 3) & 31;
+        pic_disc(cx + 34 * PIC_SIN[a] / 100, cy - 34 * PIC_SIN[(a + 8) & 31] / 100, 5, c);
+    }
+    itoa_s(v, b);
+    cat(b, "%");
+    cv_text(104, 118, &FONT_B, b, K_TEXT);
+}
+#endif
+
+TOY(toy_screw, "screw", "Screw", "reel", ROLE_CONDUCTOR, HUE_PURPLE, 40, 1, "Slows the whole band and drops its pitch, and stops the tape dead every so often.", screw_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), F(close));
 #undef DRAG
 #undef STOPS
 #undef TIME

@@ -6,7 +6,11 @@
 #undef F
 #define F(n) s8_##n
 
-typedef struct { int last, glide_ms, boom_ms, ring, gt, y, y0, y1; } slide808_t;
+typedef struct {
+    int last, glide_ms, boom_ms, ring, gt, y, y0, y1;
+    uint8_t trace[240];             /* the picture: the pen's height at every column of the bar, 0 = silent */
+    int px, nn;                     /* the pen's column, the newest note's columns */
+} slide808_t;
 
 #define GLIDE 0
 #define SLIDES 1
@@ -46,6 +50,7 @@ static void F(play)(toy_t *t, int deg, int slide)
     s->y1 = 100 + deg * 5;
     s->gt = 0;
     s->ring = s->boom_ms = 100 + P(DECAY) * 110;
+    s->nn = 0;
     toy_note(t, deg, 0, 0);
 }
 
@@ -93,11 +98,40 @@ static void F(frame)(toy_t *t, int ms)
         s->y = s->y0 + ((s->y1 - s->y0) * f >> 8);
     } else
         s->y = s->y1;
+    {                               /* the picture's pen: a column per 1/240 of the bar, wiped ten ahead */
+        int to, n, k;
+        to = imin(239, ((t->steps % BAR) * t->step_ms + t->acc) * 240 / (BAR * t->step_ms));
+        n = (to - s->px + 240) % 240;
+        if (n && n <= 120) {
+            for (k = 0; k < n + 10; k++)
+                s->trace[(s->px + k) % 240] = 0;
+            for (k = 0; k < n; k++)
+                s->trace[(s->px + k) % 240] = (uint8_t)s->y;
+            s->nn = imin(240, s->nn + n);
+            s->px = to;
+        }
+    }
 }
 
-TOY(toy_slide808, "slide808", "808 Slide", "slide", ROLE_BASS, HUE_RED, 25, 0,
-    "A booming bass that glides from note to note and drops an octave at the end of the bar.",
-    slide808_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the bass as a trace across the bar: level where a note holds, a slope where it glides,
+ * nothing in the silences; the newest note in colour */
+static void F(draw)(toy_t *t)
+{
+    slide808_t *s = ST(slide808_t);
+    int i, x0 = s->px;
+    pic_hline(0, 240, 128, K_LINE);
+    for (i = 0; i < 240; i++) {
+        int y = s->trace[i];
+        if (y)
+            cv_rect(i, y - 1, 1, 3, i == x0 || (x0 - i + 240) % 240 < s->nn ? pic_hue : K_TEXT);
+    }
+    if (s->y)
+        cv_rect(x0 - 1, s->y - 3, 3, 7, pic_hue);
+}
+#endif
+
+TOY(toy_slide808, "slide808", "808 Slide", "slide", ROLE_BASS, HUE_RED, 25, 0, "A booming bass that glides from note to note and drops an octave at the end of the bar.", slide808_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef GLIDE
 #undef SLIDES
 #undef DECAY

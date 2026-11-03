@@ -95,9 +95,25 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_chop, "chop", "Stutter Chop", "slices", ROLE_VOICE, HUE_ORANGE, 20, 1,
-    "One voice note fired again and again in a fast burst, stepping through the chord.",
-    chop_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: twelve slices of a waveform, shuffled a few at a time; the slice being fired jumps up,
+ * in colour, paler until its repeat reaches full strength */
+static void F(draw)(toy_t *t)
+{
+    chop_t *s = ST(chop_t);
+    static const uint8_t WAVE[12] = {22, 46, 72, 93, 78, 52, 33, 61, 87, 67, 39, 20};
+    int i;
+    for (i = 0; i < CH_N; i++) {
+        int x = 12 + i * 18, h = WAVE[s->order[i]];
+        if (i == s->lit)
+            cv_rect(x, 78 - h / 2 - 10, 12, h, s->full ? pic_hue : K_SOFT);
+        else
+            cv_rect(x, 78 - h / 2, 12, h, K_TEXT);
+    }
+}
+#endif
+
+TOY(toy_chop, "chop", "Stutter Chop", "slices", ROLE_VOICE, HUE_ORANGE, 20, 1, "One voice note fired again and again in a fast burst, stepping through the chord.", chop_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef RATE
 #undef BURST
 #undef MOVE

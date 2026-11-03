@@ -7,7 +7,8 @@
 
 static const uint8_t AM_RULE[4] = {30, 90, 110, 150};
 static const char *const AM_RULE_N[4] = {"Rule 30", "Rule 90", "Rule 110", "Rule 150"};
-typedef struct { uint16_t row, start; int gen; } automaton_t;
+#define AM_HIST 8
+typedef struct { uint16_t row, start; int gen; uint16_t hist[AM_HIST]; int hp; } automaton_t;   /* hist: the picture's rows */
 #define RULE 0
 #define SEEDS 1
 #define VOICES 2
@@ -25,6 +26,11 @@ static void F(deal)(toy_t *t)
         s->start = 1u << 8;
     s->row = s->start;
     s->gen = 0;
+    s->hp = 0;
+    for (i = 0; i < AM_HIST; i++)
+        s->hist[i] = 0;
+    s->hist[AM_HIST - 1] = s->start;
+    s->hp = 0;
 }
 
 static void F(make)(toy_t *t)
@@ -63,6 +69,8 @@ static void F(grow)(toy_t *t)
     }
     if (!s->row)
         s->row = s->start;
+    s->hist[s->hp] = s->row;                    /* the picture keeps the last rows */
+    s->hp = (s->hp + 1) % AM_HIST;
 }
 
 static void F(on_step)(toy_t *t)
@@ -82,9 +90,25 @@ static void F(on_step)(toy_t *t)
         toy_note(t, 0, 2, 0);
 }
 
-TOY(toy_automaton, "automaton", "Automaton", "cells", ROLE_DRUMS, HUE_GO, 0, 3,
-    "A bar of sixteen cells grows the next bar by one of Wolfram's rules. Live cells are hits.",
-    automaton_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the bars as rows of cells growing down the screen, the newest at the bottom, the step
+ * being played lit */
+static void F(draw)(toy_t *t)
+{
+    automaton_t *s = ST(automaton_t);
+    int r, i, now = t->steps % BAR;
+    for (r = 0; r < AM_HIST; r++) {
+        uint16_t row = s->hist[(s->hp + AM_HIST - 1 - r) % AM_HIST];
+        int y = 120 - r * 16;
+        for (i = 0; i < 16; i++)
+            if ((row >> i) & 1u)
+                cv_rect(8 + i * 14, y, 11, 12, r == 0 ? (i == now && t->playing ? pic_hue : K_TEXT) : r == 1 ? K_SOFT : K_SAND);
+    }
+    pic_bar(t->steps, BAR);
+}
+#endif
+
+TOY(toy_automaton, "automaton", "Automaton", "cells", ROLE_DRUMS, HUE_GO, 0, 3, "A bar of sixteen cells grows the next bar by one of Wolfram's rules. Live cells are hits.", automaton_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef RULE
 #undef SEEDS
 #undef VOICES

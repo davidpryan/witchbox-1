@@ -69,9 +69,30 @@ static void F(on_step)(toy_t *t)
         S.chords = 1 + dice_int(NPROG);
 }
 
-TOY(toy_moon, "moon", "Moon", "moon", ROLE_CONDUCTOR, HUE_BLUE, 0, 3,
-    "A conductor. Moves the whole band to the next dark scale every phase, sometimes with new chords, then comes home.",
-    moon_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, 0, F(close));
+#ifdef WB_PICTURES
+/* the picture: a moon whose phase is the conductor's, full at home and waning as it moves off; the
+ * scale's name under it */
+static void F(draw)(toy_t *t)
+{
+    moon_t *s = ST(moon_t);
+    int ph = s->phase, cx = 120, cy = 62, dy, home = s->phase == 0;
+    char b[16];
+    pic_disc(cx, cy, 36, home ? K_TEXT : K_SOFT);
+    if (!home) {
+        int off = imin(8, ph) * 9;
+        for (dy = -36; dy <= 36; dy++) {
+            int dx = 0;
+            while (dx < 36 && (dx + 1) * (dx + 1) + dy * dy <= 36 * 36) dx++;
+            cv_rect(cx - dx + off / 4, cy + dy, imax(0, dx * 2 - off), 1, K_PANEL);
+        }
+    }
+    caps(b, SCALE_NAME[S.scale.value], 16);
+    cv_text(cx - 30, 110, &FONT_XS, b, pic_hue);
+    cv_text(cx - 30, 126, &FONT_XS, home ? "HOME" : "AWAY", K_DIM);
+}
+#endif
+
+TOY(toy_moon, "moon", "Moon", "moon", ROLE_CONDUCTOR, HUE_BLUE, 0, 3, "A conductor. Moves the whole band to the next dark scale every phase, sometimes with new chords, then comes home.", moon_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), F(close));
 #undef EVERY
 #undef SCALES
 #undef CHORDS

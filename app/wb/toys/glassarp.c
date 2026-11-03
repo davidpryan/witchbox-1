@@ -117,9 +117,26 @@ static void F(frame)(toy_t *t, int ms)
 
 static void F(play_changed)(toy_t *t) { ST(glassarp_t)->ne = 0; }
 
-TOY(toy_glassarp, "glassarp", "Glass Arp", "diamond", ROLE_LEAD, HUE_CYAN, 40, 0,
-    "A bright bell running through the chord, with skipped notes, leaps and echoes.",
-    glassarp_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: eight crystals, one a note of the run, tall for high notes; each flares when it sounds,
+ * dimmer for an echo, with a gem above it when the note leaps an octave */
+static void F(draw)(toy_t *t)
+{
+    glassarp_t *s = ST(glassarp_t);
+    int i;
+    for (i = 0; i < GA_N; i++) {
+        int x = pic_col(i, GA_N, 18), h = (36 + (s->root + s->order[i]) * 6) * 3 / 4, top = 132 - h, k;
+        uint16_t c = s->glow[i] == 1 ? pic_hue : s->glow[i] == 2 ? K_SOFT : K_TEXT;
+        for (k = 0; k < 3; k++)
+            cv_rect(x - 1 - k, top + 3 * k, 3 + 3 * k, 3, c);
+        cv_rect(x - 6, top + 9, 12, h - 9, c);
+        if (s->gem[i])
+            cv_rect(x - 2, top - 7, 5, 5, c);
+    }
+}
+#endif
+
+TOY(toy_glassarp, "glassarp", "Glass Arp", "diamond", ROLE_LEAD, HUE_CYAN, 40, 0, "A bright bell running through the chord, with skipped notes, leaps and echoes.", glassarp_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef SHAPE
 #undef SKIPS
 #undef LEAP

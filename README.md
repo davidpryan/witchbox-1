@@ -31,6 +31,9 @@ takes you back.
   shelf, the seed, the global strip, the effects, the mixer and a slow drift on the knobs live under
   the buttons; the keys are pads: steer the chord root, mute and solo, dice, half and double time,
   freeze, brake, filter, crush, drive, echo.
+- **Pictures**: every toy has its own moving picture on the Toy page — Playbox's own for the forty
+  ported toys, and one for each toy's mechanism for the forty new — and the band page's members are
+  ghosts that sing.
 - **Sounds**: Playbox's own sound engine written out in C: its instruments (analog, FM, plucked
   string, organ, formant voice, pitched 808), drums and kits, and the CC0 recordings it used, packed
   to fit. Each toy plays the sounds Playbox gave it.

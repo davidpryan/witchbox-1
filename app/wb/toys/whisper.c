@@ -50,9 +50,28 @@ static void F(on_step)(toy_t *t)
         toy_note(t, tune_nearest(deg + 2 + dice_int(3), root), 1, hold);
 }
 
-TOY(toy_whisper, "whisper", "Whisper", "whisper", ROLE_TEXTURE, HUE_PINK, 0, 3,
-    "Breathy voice fragments, quiet and far between, that come in bursts and then fall silent.",
-    whisper_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: each whisper as a breath, a soft oval that drifts up and fades; a burst leaves a few at
+ * once */
+static void F(draw)(toy_t *t)
+{
+    uint32_t now = plat_ms(), i;
+    for (i = 0; i < NOTE_LOG; i++) {
+        const note_log_t *l = &note_log[i];
+        int x, y, w, k;
+        if (!l->at || l->seat != (uint8_t)t->seat || now - l->at > 3000u)
+            continue;
+        x = 30 + (int)(pic_hash(l->at, 3) % 180u);
+        y = 110 - (int)((now - l->at) * 80u / 3000u);
+        w = 10 + (int)((now - l->at) * 20u / 3000u);
+        for (k = -2; k <= 2; k++)
+            cv_rect(x - w / 2 + k * k, y + k * 2, w - k * k * 2, 1, now - l->at < 500u ? (l->voice ? K_SOFT : pic_hue) : K_SAND);
+    }
+    cv_text(96, 128, &FONT_XS, "...", K_DIM);
+}
+#endif
+
+TOY(toy_whisper, "whisper", "Whisper", "whisper", ROLE_TEXTURE, HUE_PINK, 0, 3, "Breathy voice fragments, quiet and far between, that come in bursts and then fall silent.", whisper_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef DENSITY
 #undef BURSTS
 #undef LENGTH

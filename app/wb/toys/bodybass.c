@@ -58,9 +58,28 @@ static void F(on_step)(toy_t *t)
     toy_note(t, deg, 0, 0);
 }
 
-TOY(toy_bodybass, "bodybass", "Body Bass", "pluck", ROLE_BASS, HUE_ORANGE, 0, 2,
-    "A plucked bass that carries a tune, walking between the notes of the chord.",
-    bodybass_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a staircase of the chord's notes; the bass as a dot that steps between them, and the
+ * trail it has walked */
+static void F(draw)(toy_t *t)
+{
+    bodybass_t *s = ST(bodybass_t);
+    int8_t tones[12];
+    uint32_t now = plat_ms(), i;
+    int root = toy_root(t, 0) - 7, n = tune_tones(root, root - 2, root + 9, tones), k;
+    for (k = 0; k < n; k++)
+        cv_rect(16, 124 - (tones[k] - root + 2) * 9, 208, 1, K_LINE);
+    for (i = 0; i < NOTE_LOG; i++) {
+        const note_log_t *l = &note_log[i];
+        if (!l->at || l->seat != (uint8_t)t->seat || now - l->at > 4000u)
+            continue;
+        cv_rect(224 - (int)((now - l->at) * 200u / 4000u) - 4, 124 - (l->degree - root + 2) * 9 - 2, 8, 4, K_SOFT);
+    }
+    pic_disc(224, 124 - (s->deg - root + 2) * 9, pic_ago(t, -1) < 120u ? 6 : 4, pic_hue);
+}
+#endif
+
+TOY(toy_bodybass, "bodybass", "Body Bass", "pluck", ROLE_BASS, HUE_ORANGE, 0, 2, "A plucked bass that carries a tune, walking between the notes of the chord.", bodybass_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef WALK
 #undef NOTES
 #undef RANGE

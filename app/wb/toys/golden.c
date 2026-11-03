@@ -61,6 +61,7 @@ static void F(on_step)(toy_t *t)
     if (s->left < 0)
         s->left = 0;
     s->at++;
+    s->k++;
     f = s->b;                                   /* the next Fibonacci number, kept small */
     s->b = (s->a + s->b) % (P(SPAN) * 7);
     s->a = f;
@@ -72,9 +73,25 @@ static void F(on_step)(toy_t *t)
     toy_note(t, toy_root(t, 0) + 7 + deg, 0, 0);
 }
 
-TOY(toy_golden, "golden", "Golden", "spiral", ROLE_LEAD, HUE_YELLOW, 0, 3,
-    "The Fibonacci word is the rhythm and the Fibonacci numbers the notes: a tune that never repeats and never quite surprises.",
-    golden_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a golden spiral of squares, the Fibonacci squares, the one whose number plays now lit;
+ * the rhythm's long and short as the frame under it */
+static void F(draw)(toy_t *t)
+{
+    golden_t *s = ST(golden_t);
+    static const uint8_t SQ[6][3] = {{152, 10, 88}, {64, 10, 88}, {64, 98, 34}, {98, 98, 34}, {98, 77, 21}, {119, 77, 21}};
+    int i, k = s->k % 6;
+    for (i = 0; i < 6; i++) {
+        int x = SQ[i][0], y = SQ[i][1], w = SQ[i][2];
+        cv_rect(x, y, w, w, i == k && t->playing ? pic_hue : K_PANEL);
+        cv_rect(x, y, w, 1, K_SOFT); cv_rect(x, y, 1, w, K_SOFT);
+        cv_rect(x, y + w - 1, w, 1, K_SOFT); cv_rect(x + w - 1, y, 1, w, K_SOFT);
+    }
+    cv_rect(8, 132, s->left > 0 ? 20 : 10, 3, K_TEXT);
+}
+#endif
+
+TOY(toy_golden, "golden", "Golden", "spiral", ROLE_LEAD, HUE_YELLOW, 0, 3, "The Fibonacci word is the rhythm and the Fibonacci numbers the notes: a tune that never repeats and never quite surprises.", golden_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef SPAN
 #undef SHORT
 #undef MIRROR

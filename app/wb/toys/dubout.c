@@ -77,9 +77,29 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_dubout, "dubout", "Dub Out", "echo", ROLE_CONDUCTOR, HUE_GO, 0, 2,
-    "A conductor. Throws one part into the echo at the end of each phrase.",
-    dubout_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, 0, F(close));
+#ifdef WB_PICTURES
+/* the picture: the phrase as a bar that fills; at its end the thrown part's seat is named and rings
+ * spread from it into the echo */
+static void F(draw)(toy_t *t)
+{
+    dubout_t *s = ST(dubout_t);
+    int period = DU_PHRASE[P(PHRASE)], at = toy_now(t) % period, i;
+    char b[12] = "SEAT ";
+    cv_rect(20, 60, 200, 10, K_PANEL);
+    cv_rect(20, 60, at * 200 / period, 10, K_TEXT);
+    cv_rect(20 + (period - DU_LEN[P(LENGTH)]) * 200 / period, 56, 2, 18, pic_hue);
+    if (s->thrown >= 0) {
+        b[5] = (char)('1' + s->thrown);
+        b[6] = 0;
+        cv_text(96, 100, &FONT_XS, b, pic_hue);
+        for (i = 0; i < 3; i++)
+            pic_ring(120, 90, 16 + i * 10 + (int)((plat_ms() / 50u) % 10u), 15 + i * 10 + (int)((plat_ms() / 50u) % 10u), i == 0 ? pic_hue : K_SOFT);
+    } else
+        cv_text(84, 100, &FONT_XS, "NEXT THROW", K_DIM);
+}
+#endif
+
+TOY(toy_dubout, "dubout", "Dub Out", "echo", ROLE_CONDUCTOR, HUE_GO, 0, 2, "A conductor. Throws one part into the echo at the end of each phrase.", dubout_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), F(close));
 #undef THROW
 #undef PHRASE
 #undef LENGTH

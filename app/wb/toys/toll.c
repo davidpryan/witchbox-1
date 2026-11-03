@@ -50,9 +50,27 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_toll, "toll", "Toll Bell", "bell", ROLE_TEXTURE, HUE_PURPLE, 0, 2,
-    "One deep bell, struck every few bars and left to ring.",
-    toll_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a bell that swings when it is struck, with rings spreading from it while it sounds */
+static void F(draw)(toy_t *t)
+{
+    uint32_t ago = pic_ago(t, 0);
+    int swing = ago < 1200u ? PIC_SIN[(ago / 40u) & 31] * (int)(1200u - ago) / 100 / 120 : 0, cx = 120 + swing, i;
+    if (ago < 3000u)
+        for (i = 0; i < 3; i++) {
+            int r = 36 + (int)(ago / 25u) + i * 14;
+            if (r < 120)
+                pic_ring(120, 76, r, r - 2, i == 0 ? K_SOFT : K_SAND);
+        }
+    cv_rect(118, 14, 4, 10, K_SOFT);
+    for (i = 0; i < 44; i++)
+        cv_rect(cx - 8 - i * i / 60, 24 + i, 16 + i * i / 30, 1, ago < 120u ? pic_hue : K_TEXT);
+    cv_rect(cx - 30, 68, 60, 5, ago < 120u ? pic_hue : K_TEXT);
+    pic_disc(cx, 80, 5, K_SOFT);
+}
+#endif
+
+TOY(toy_toll, "toll", "Toll Bell", "bell", ROLE_TEXTURE, HUE_PURPLE, 0, 2, "One deep bell, struck every few bars and left to ring.", toll_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef EVERY
 #undef STRIKES
 #undef NOTE

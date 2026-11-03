@@ -69,9 +69,31 @@ static void F(frame)(toy_t *t, int ms)
     s->level = s->lvl / 10;
 }
 
-TOY(toy_pumppad, "pumppad", "Pump Pad", "oval", ROLE_CHORDS, HUE_PINK, 30, 0,
-    "A held chord that ducks on every kick and swells back.",
-    pumppad_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a blob that squashes flat on every kick and swells back, round-cornered, in colour while
+ * it is ducked */
+static void F(draw)(toy_t *t)
+{
+    pumppad_t *s = ST(pumppad_t);
+    int w = 72 + P(SPREAD) * 15, h = (18 + 75 * s->lvl / 1000) & ~3, r = 9, cx = 120, cy = 72, y;
+    uint16_t c = s->lvl < 1000 ? pic_hue : K_TEXT;
+    if (h < 2 * r)
+        r = h / 2;
+    cv_rect(cx - w / 2, cy - h / 2, w, h, c);
+    /* the corners, cut back to round */
+    for (y = 0; y < r; y++) {
+        int dy = r - y, dx = r;
+        while (dx > 0 && dx * dx + dy * dy > r * r)
+            dx--;
+        cv_rect(cx - w / 2, cy - h / 2 + y, r - dx, 1, K_BG);
+        cv_rect(cx + w / 2 - (r - dx), cy - h / 2 + y, r - dx, 1, K_BG);
+        cv_rect(cx - w / 2, cy + h / 2 - 1 - y, r - dx, 1, K_BG);
+        cv_rect(cx + w / 2 - (r - dx), cy + h / 2 - 1 - y, r - dx, 1, K_BG);
+    }
+}
+#endif
+
+TOY(toy_pumppad, "pumppad", "Pump Pad", "oval", ROLE_CHORDS, HUE_PINK, 30, 0, "A held chord that ducks on every kick and swells back.", pumppad_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef DEPTH
 #undef RECOVERY
 #undef COLOUR

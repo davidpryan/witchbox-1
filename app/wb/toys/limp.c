@@ -125,9 +125,26 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_limp, "limp", "Limp", "metro", ROLE_DRUMS, HUE_PINK, 30, 0,
-    "A drunk kick and snare. The snare drags, the kick rushes, and now and then a hit goes missing.",
-    limp_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a metronome arm swinging between Kick and Snare, lit when a hit lands */
+static void F(draw)(toy_t *t)
+{
+    limp_t *s = ST(limp_t);
+    int px = 120, py = 128, x = px + s->at * 36 / 1000, dx = x - px, len = 104, y, i;
+    uint16_t c = s->hot ? pic_hue : K_TEXT;
+    for (y = len; y * y + dx * dx > len * len; y--) ;
+    y = py - y;
+    cv_text(px - 36 - 24, 10, &FONT_XS, "KICK", K_SOFT);
+    cv_text(px + 36 + 4, 10, &FONT_XS, "SNARE", K_SOFT);
+    cv_rect(px - 45, py + 6, 91, 2, K_SOFT);
+    for (i = 0; i < 3; i++)
+        cv_line(px + i - 1, py, x + i - 1, y, c);
+    cv_rect((px + x) / 2 - 5, (py + y) / 2 - 3, 11, 7, c);
+    pic_disc(px, py, 4, K_TEXT);
+}
+#endif
+
+TOY(toy_limp, "limp", "Limp", "metro", ROLE_DRUMS, HUE_PINK, 30, 0, "A drunk kick and snare. The snare drags, the kick rushes, and now and then a hit goes missing.", limp_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef DRAG
 #undef RUSH
 #undef GRID

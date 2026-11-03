@@ -34,17 +34,7 @@ static const uint8_t WHITE[16] = {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 
 static const uint8_t BLACK[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
 static int8_t key_white[27], key_black[27];     /* key -> white 0..15 / black 0..10 or -1 */
 
-/* the screen's colours: a dark room, cream text, one colour per hue */
-#define K_BG RGB(20, 20, 26)
-#define K_PANEL RGB(40, 40, 50)
-#define K_LINE RGB(66, 66, 80)
-#define K_DIM RGB(140, 136, 150)
-#define K_TEXT RGB(248, 242, 226)
-#define K_SAND RGB(92, 94, 106)
-static const uint16_t HUE_C[NHUES] = {RGB(140, 92, 230), RGB(66, 134, 244), RGB(60, 200, 220), RGB(84, 196, 110),
-                                      RGB(240, 200, 60), RGB(244, 140, 50), RGB(232, 70, 70), RGB(240, 110, 180),
-                                      RGB(150, 150, 158)};
-#define K_ACC RGB(255, 84, 164)
+/* the screen's colours and the pictures' helpers: wb/toys/pic.h, included by the toys before this */
 
 static struct {
     int page, hold, dirty, help, browse, bpage, hint;
@@ -76,54 +66,7 @@ int ui_dirty(void) { return ui.dirty != 0; }
 int ui_held(void) { return ui.held; }
 void ui_hold(int on) { ui.held = on; }
 
-static void itoa_u(uint32_t v, char *b)
-{
-    char t[12];
-    int n = 0;
-    do {
-        t[n++] = (char)('0' + v % 10u);
-        v /= 10u;
-    } while (v);
-    while (n)
-        *b++ = t[--n];
-    *b = 0;
-}
-static void itoa_s(int v, char *b)
-{
-    if (v < 0) {
-        *b++ = '-';
-        v = -v;
-    }
-    itoa_u((uint32_t)v, b);
-}
-static void itoa_w(uint32_t v, char *b, int w)   /* zero padded */
-{
-    char t[12];
-    int n = 0, i;
-    itoa_u(v, t);
-    while (t[n])
-        n++;
-    for (i = 0; i < w - n; i++)
-        *b++ = '0';
-    for (i = 0; i < n; i++)
-        *b++ = t[i];
-    *b = 0;
-}
-static void caps(char *d, const char *s, int n)
-{
-    int i;
-    for (i = 0; i < n - 1 && s[i]; i++)
-        d[i] = (char)(s[i] >= 'a' && s[i] <= 'z' ? s[i] - 32 : s[i]);
-    d[i] = 0;
-}
-static void cat(char *d, const char *s)
-{
-    while (*d)
-        d++;
-    while (*s)
-        *d++ = *s++;
-    *d = 0;
-}
+/* itoa_u, itoa_s, itoa_w, caps, cat: wb/toys/pic.h */
 
 static toy_t *cur(void) { return band_seated(proj.cur) ? &band[proj.cur] : 0; }
 
@@ -623,12 +566,16 @@ static void draw_header(void)      /* 0..24: the seat and its toy, the seed, the
     cv_blit(0, 0);
 }
 
-static void draw_roll(void)        /* the toy page: what the seat played lately, scrolling */
+static void draw_roll(void)        /* the toy page: the toy's own picture, or what the seat played lately */
 {
     uint32_t now = plat_ms(), i;
     toy_t *t = cur();
     int x;
     cv_begin(240, 144, K_BG);
+    if (t && t->c->draw) {
+        pic_hue = HUE_C[t->c->hue];
+        t->c->draw(t);
+    } else {
     for (x = 0; x < 240; x += 30)
         cv_rect(x, 0, 1, 144, K_LINE);
     cv_rect(0, 72, 240, 1, K_LINE);
@@ -652,12 +599,15 @@ static void draw_roll(void)        /* the toy page: what the seat played lately,
         }
         cv_rect(px - w, py, w, 4, age < 150u ? K_TEXT : seat_colour(proj.cur));
     }
+    }
     if (t) {
         char b[8];
         int pos = (S.band_steps % BAR) * 236 / BAR;
-        cv_rect(2 + pos, 134, 236 / BAR - 2, 6, band_playing ? K_TEXT : K_SAND);
-        itoa_s(S.band_steps / BAR + 1, b);
-        cv_text(4, 4, &FONT_XS, b, K_DIM);
+        if (!t->c->draw) {
+            cv_rect(2 + pos, 134, 236 / BAR - 2, 6, band_playing ? K_TEXT : K_SAND);
+            itoa_s(S.band_steps / BAR + 1, b);
+            cv_text(4, 4, &FONT_XS, b, K_DIM);
+        }
         if (proj.now.seat[proj.cur].mute)
             text_c(120, 60, &FONT_B, "MUTED", K_DIM);
         if (S.speed != 100) {
@@ -673,16 +623,28 @@ static void draw_roll(void)        /* the toy page: what the seat played lately,
     cv_blit(0, 24);
 }
 
-/* a singer: a little face that opens its mouth for a moment when its seat sounds a note */
-static void draw_singer(int x, int y, uint16_t c, int open, int dim)
+/* a band member is a ghost, as the Witchbox toys are: a round head, a wavy hem, two eyes, in its toy's
+ * colour; it bobs up and opens its mouth for a moment when its seat sounds a note, and goes pale when
+ * the seat is quiet (muted, cut, soloed out, or resting in the arrangement) */
+static void draw_ghost(int x, int y, uint16_t c, int open, int dim)
 {
-    uint16_t face = dim ? K_SAND : c;
-    cv_rect(x + 3, y, 8, 2, face);
-    cv_rect(x + 1, y + 2, 12, 10, face);
-    cv_rect(x + 3, y + 12, 8, 2, face);
-    cv_rect(x + 4, y + 4, 2, 2, K_BG);                  /* eyes */
-    cv_rect(x + 8, y + 4, 2, 2, K_BG);
-    cv_rect(x + 4, y + 8, 6, open ? 4 : 1, K_BG);       /* mouth */
+    uint16_t body = dim ? K_SAND : c;
+    static const uint8_t HEM[12] = {1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0};
+    int i;
+    if (open)
+        y -= 1;                                             /* it bobs */
+    cv_rect(x + 3, y, 6, 1, body);                          /* the head's crown */
+    cv_rect(x + 1, y + 1, 10, 2, body);
+    cv_rect(x, y + 3, 12, 9, body);
+    for (i = 0; i < 12; i++)                                /* the hem: three scallops */
+        if (HEM[i] || i == 11)
+            cv_rect(x + i, y + 12, 1, 1, K_BG);
+        else
+            cv_rect(x + i, y + 12, 1, i % 3 == 1 ? 2 : 1, body);
+    cv_rect(x + 3, y + 5, 2, 2, K_BG);                      /* eyes */
+    cv_rect(x + 7, y + 5, 2, 2, K_BG);
+    if (open)
+        cv_rect(x + 5, y + 9, 2, 2, K_BG);                  /* a round mouth: it sings */
 }
 
 static int sang(int s, uint32_t now, uint32_t within)  /* did seat s sound a note lately? */
@@ -708,7 +670,7 @@ static void draw_band(void)        /* the band page: eight seats, their toys, si
             cv_rect(0, y, 240, 17, K_PANEL);
         cv_rect(2, y + 2, 3, 13, c);
         if (band[s].c)
-            draw_singer(8, y + 2, c, sang(s, now, 160u), quiet);
+            draw_ghost(8, y + 2, c, sang(s, now, 160u), quiet);
         b[0] = (char)('1' + s);
         b[1] = 0;
         cv_text(26, y + 1, &FONT_XS, b, K_DIM);

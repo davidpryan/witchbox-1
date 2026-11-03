@@ -87,9 +87,33 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_hatroll, "hatroll", "Hat Roll", "hats", ROLE_DRUMS, HUE_PURPLE, 20, 0,
-    "Steady hi-hats that break into fast rolls at the ends of bars.",
-    hatroll_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: eight beads on a string, open hats hollow; the last beat's two beads give way to the
+ * roll's cluster, tilted by the ramp, each bead lit as it sounds */
+static void F(draw)(toy_t *t)
+{
+    hatroll_t *s = ST(hatroll_t);
+    static const uint8_t COUNT[3] = {4, 6, 8}, BASE[3] = {3, 3, 2}, SWING[3] = {2, 2, 1};
+    int slot, y = 72;
+    pic_hline(9, 231, y, K_SAND);
+    for (slot = 0; slot < (s->rolling ? 6 : 8); slot++) {
+        int x = 24 + slot * 26;
+        pic_disc(x, y, 5, slot == s->lit ? pic_hue : K_TEXT);
+        if (s->opens[slot])
+            pic_disc(x, y, 2, K_BG);
+    }
+    if (s->rolling) {
+        int n = COUNT[P(RATE)], k;
+        for (k = 0; k < n; k++) {
+            int lean = P(RAMP) * (2 * k - (n - 1));
+            int r = BASE[P(RATE)] + lean * SWING[P(RATE)] / (5 * (n - 1));
+            pic_disc(178 + k * 54 / n, y - lean * 3 / (n - 1), r, k < s->k ? pic_hue : K_TEXT);
+        }
+    }
+}
+#endif
+
+TOY(toy_hatroll, "hatroll", "Hat Roll", "hats", ROLE_DRUMS, HUE_PURPLE, 20, 0, "Steady hi-hats that break into fast rolls at the ends of bars.", hatroll_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef CHANCE
 #undef RATE
 #undef RAMP

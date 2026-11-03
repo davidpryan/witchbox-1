@@ -66,9 +66,25 @@ static void F(frame)(toy_t *t, int ms)
     s->opened = P(OPEN) * 10 * imin(s->age, whole) / whole;
 }
 
-TOY(toy_coven, "coven", "Coven Saws", "triangle", ROLE_CHORDS, HUE_PURPLE, 40, 0,
-    "Thick detuned chords held for whole bars. Sometimes they slip up a step.",
-    coven_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: three triangles stacked, further apart with Detune, shading towards the colour as the
+ * tone opens, thrown sideways for a moment when the chord slips */
+static void F(draw)(toy_t *t)
+{
+    coven_t *s = ST(coven_t);
+    int gap = 28 + P(DETUNE) * 3 / 2, dx = s->jolt ? 20 : 0, k, i, shade = s->opened * 6 / 100;
+    uint16_t c = shade >= 4 ? pic_hue : shade >= 2 ? K_SOFT : K_TEXT;
+    for (k = -1; k <= 1; k++) {
+        int top = 72 + k * gap - 12;
+        for (i = 0; i < 8; i++) {
+            int half = 3 + i * 3;
+            cv_rect(120 + dx - half, top + i * 3, 2 * half, 3, c);
+        }
+    }
+}
+#endif
+
+TOY(toy_coven, "coven", "Coven Saws", "triangle", ROLE_CHORDS, HUE_PURPLE, 40, 0, "Thick detuned chords held for whole bars. Sometimes they slip up a step.", coven_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef DETUNE
 #undef OPEN
 #undef SLIP

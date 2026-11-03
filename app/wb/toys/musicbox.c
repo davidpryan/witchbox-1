@@ -86,9 +86,36 @@ static void F(play_changed)(toy_t *t)
         ST(musicbox_t)->run = 0;
 }
 
-TOY(toy_musicbox, "musicbox", "Music Box", "comb", ROLE_LEAD, HUE_PINK, 30, 1,
-    "A tinkling, slightly sour tune in its own time, winding down and wound again.",
-    musicbox_t, F(make), 0, 0, F(randomise), 0, F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a comb of eight teeth (bent by Sour), a cylinder of pins creeping up to it, the tooth
+ * plucked lit for a moment, and the wind-up key, seen flat or edge on while it is wound */
+static void F(draw)(toy_t *t)
+{
+    musicbox_t *s = ST(musicbox_t);
+    static const int8_t BENT[8] = {3, -2, 5, -4, 1, -5, 4, -1};
+    int k, r, key = s->rewind ? (s->rewind / 90) % 2 : 0, x0 = 36, y0 = 60, pitch = 13;
+    cv_rect(42, 6, 156, 9, K_TEXT);                                 /* the comb's back */
+    for (k = 0; k < 8; k++) {
+        int h = (44 - k * 2 + BENT[k] * P(SOUR) / 5) * 3 / 4, tx = 52 + k * 20;
+        cv_rect(tx - 6, 15, 12, h, k == s->hot ? pic_hue : K_TEXT);
+    }
+    cv_rect(x0, y0, 162, 66, K_TEXT);                               /* the cylinder */
+    cv_rect(x0, y0, 5, 66, K_SOFT);
+    cv_rect(x0 + 157, y0, 5, 66, K_SOFT);
+    for (r = 0; r < 5; r++) {                                       /* the pins in view */
+        int tk = MB_TUNE[(s->i + r) % P(SIZE)], y = y0 + (r + 1) * pitch - s->off * pitch / 16;
+        if (y >= y0 && y + 4 <= y0 + 66)
+            cv_rect(52 + tk * 20 - 4, y, 8, 4, RGB(43, 45, 66));
+    }
+    cv_rect(x0 + 162, 92, 9, 5, K_SOFT);                            /* the key's shaft */
+    if (key)
+        cv_rect(x0 + 171 + 8, 80, 5, 28, K_TEXT);
+    else
+        cv_rect(x0 + 171, 90, 21, 8, K_TEXT);
+}
+#endif
+
+TOY(toy_musicbox, "musicbox", "Music Box", "comb", ROLE_LEAD, HUE_PINK, 30, 1, "A tinkling, slightly sour tune in its own time, winding down and wound again.", musicbox_t, F(make), 0, 0, F(randomise), 0, F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef SIZE
 #undef WIND
 #undef SOUR

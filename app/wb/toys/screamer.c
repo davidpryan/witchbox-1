@@ -175,9 +175,29 @@ static void F(play_changed)(toy_t *t)
         F(rest)(t);                 /* (a line being rubbed out is finished first) */
 }
 
-TOY(toy_screamer, "screamer", "Screamer", "bolt", ROLE_LEAD, HUE_RED, 30, 0,
-    "Short bursts of fast, dirty notes that end in a squeal.",
-    screamer_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a ruler of beats, and each burst as a jagged line, note to note, that curls and shoots
+ * off at the squeal; in colour while it sounds, then grey, then gone */
+static void F(draw)(toy_t *t)
+{
+    screamer_t *s = ST(screamer_t);
+    int i, k, upto = s->painting ? s->paint_k : s->npts - 1;
+    uint16_t c;
+    for (i = 0; i < 17; i++)
+        cv_rect(11 + i * 14, 134, 2, i % 4 == 0 ? 5 : 3, K_SAND);
+    if (s->ink == INK_GROUND && !s->painting)
+        return;
+    for (k = 0; k + 1 < s->npts; k++) {
+        int ink = s->painting && k < upto ? s->paint_c : s->ink;
+        if (ink == INK_GROUND)
+            continue;
+        c = ink == INK_HUE ? pic_hue : ink == INK_SAND ? K_SAND : K_TEXT;
+        cv_line(s->px[k] * 3 / 4, (s->py[k] - 26) * 3 / 4, s->px[k + 1] * 3 / 4, (s->py[k + 1] - 26) * 3 / 4, c);
+    }
+}
+#endif
+
+TOY(toy_screamer, "screamer", "Screamer", "bolt", ROLE_LEAD, HUE_RED, 30, 0, "Short bursts of fast, dirty notes that end in a squeal.", screamer_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef BURSTS
 #undef SIZE
 #undef SQUEAL

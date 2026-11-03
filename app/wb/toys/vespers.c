@@ -55,9 +55,25 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_vespers, "vespers", "Vespers", "choir", ROLE_CHORDS, HUE_PURPLE, 0, 2,
-    "A low choir chanting long, slow notes that barely move.",
-    vespers_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the chant as a long low bar at the note's height, and a second above it when the second
+ * line sings; both breathe in colour while they sound */
+static void F(draw)(toy_t *t)
+{
+    vespers_t *s = ST(vespers_t);
+    int root = toy_root(t, 0) - 7, y = 112 - (s->deg - root) * 6, y2 = 112 - (s->up - root) * 6;
+    uint32_t ago = pic_ago(t, 0);
+    int k;
+    for (k = 0; k < 7; k++)
+        cv_rect(16, 112 - k * 6, 208, 1, K_LINE);
+    cv_rect(16, y - 4, 208, 8, ago < 60000u && t->playing ? pic_hue : K_TEXT);
+    if (P(SECOND))
+        cv_rect(40, y2 - 3, 160, 6, ago < 60000u && t->playing ? K_SOFT : K_SAND);
+    cv_text(16, 124, &FONT_XS, "CHANT", K_DIM);
+}
+#endif
+
+TOY(toy_vespers, "vespers", "Vespers", "choir", ROLE_CHORDS, HUE_PURPLE, 0, 2, "A low choir chanting long, slow notes that barely move.", vespers_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef NOTES
 #undef SECOND
 #undef HOLD

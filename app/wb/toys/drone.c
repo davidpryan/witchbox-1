@@ -66,9 +66,22 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_drone, "drone", "Drone", "hbar", ROLE_BASS, HUE_PURPLE, 50, 0,
-    "One note held under everything. It ignores the chords and slowly shifts its tone.",
-    drone_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: one bar across the middle, fatter for more notes, swelling as the tone opens; the
+ * overtones come in above it one by one, shorter and higher */
+static void F(draw)(toy_t *t)
+{
+    drone_t *s = ST(drone_t);
+    int tone = t->playing ? s->tone : 0, notes = (P(WHICH) == 2 ? 2 : 1) * (P(OCTAVE) == 2 ? 2 : 1);
+    int half = 4 + notes * 2 + tone * 6 / 100, n, k;
+    cv_rect(30, 93 - half, 180, 2 * half, K_TEXT);
+    n = t->playing ? (P(OVER) * (30 + tone * 70 / 100) + 50) / 100 : 0;
+    for (k = 0; k < n && k < 10; k++)
+        cv_rect(30 + k * 8, 93 - 27 - k * 7, 180 - k * 16, 2, pic_hue);
+}
+#endif
+
+TOY(toy_drone, "drone", "Drone", "hbar", ROLE_BASS, HUE_PURPLE, 50, 0, "One note held under everything. It ignores the chords and slowly shifts its tone.", drone_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef WHICH
 #undef OVER
 #undef BREATHE

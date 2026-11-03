@@ -47,9 +47,28 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_afterhours, "afterhours", "After Hours", "keys", ROLE_CHORDS, HUE_BLUE, 0, 2,
-    "Slow electric piano chords with extra notes on top, played a little late.",
-    afterhours_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the chord as its notes stacked on a keyboard, with the extras on top; it lands late, so
+ * the beat's mark and the chord's are apart; the keys struck light for a moment */
+static void F(draw)(toy_t *t)
+{
+    int k, root = toy_root(t, 0), n = 3 + P(EXTRA);
+    for (k = 0; k < 15; k++) {
+        uint32_t ago = pic_ago_deg(t, k);
+        cv_rect(8 + k * 15, 96, 14, 36, ago < 400u ? pic_hue : K_TEXT);
+    }
+    for (k = 0; k < n; k++) {
+        int deg = (root + 2 * k) % 14;
+        cv_rect(8 + deg * 15 + 2, 80 - k * 10, 10, 6, k < 3 ? K_TEXT : K_SOFT);
+    }
+    cv_text(8, 8, &FONT_XS, "BEAT", K_DIM);
+    cv_rect(40, 10, 2, 10, K_SOFT);
+    cv_rect(40 + P(LATE) * 14, 10, 2, 10, pic_hue);
+    cv_text(8, 24, &FONT_XS, "LATE", K_DIM);
+}
+#endif
+
+TOY(toy_afterhours, "afterhours", "After Hours", "keys", ROLE_CHORDS, HUE_BLUE, 0, 2, "Slow electric piano chords with extra notes on top, played a little late.", afterhours_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef LATE
 #undef EXTRA
 #undef RATE

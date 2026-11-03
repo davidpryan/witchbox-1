@@ -124,9 +124,30 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_twostep, "twostep", "Two-Step", "steps2", ROLE_DRUMS, HUE_BLUE, 20, 0,
-    "A limping garage beat. The second kick lands somewhere odd, and every hit sits a little off the grid.",
-    twostep_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: sixteen grid lines, a dot per hit on its kind's row, each sat off its line by its lean,
+ * swollen for a moment when it sounds */
+static void F(draw)(toy_t *t)
+{
+    twostep_t *s = ST(twostep_t);
+    static const uint8_t ROW[5] = {0, 110, 74, 38, 56}, SIZE[5] = {0, 4, 3, 2, 1};
+    int i;
+    for (i = 0; i < BAR; i++)
+        pic_vline(12 + i * 14, 14, 128, i % 4 == 0 ? K_TEXT : K_SOFT);
+    for (i = 0; i < BAR; i++) {
+        int kind = s->kind[i], x, big;
+        uint16_t c;
+        if (!kind)
+            continue;
+        x = 12 + i * 14 + F(shift)(t, i) * 3 / 4;
+        big = SIZE[kind] + 2;
+        c = kind == K_KICK ? pic_hue : kind == K_SNARE ? K_TEXT : K_SOFT;
+        pic_disc(x, ROW[kind], s->hot[i] ? big : big - 2, c);
+    }
+}
+#endif
+
+TOY(toy_twostep, "twostep", "Two-Step", "steps2", ROLE_DRUMS, HUE_BLUE, 20, 0, "A limping garage beat. The second kick lands somewhere odd, and every hit sits a little off the grid.", twostep_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef K_NONE
 #undef K_KICK
 #undef K_SNARE

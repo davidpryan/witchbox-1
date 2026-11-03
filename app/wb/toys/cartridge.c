@@ -69,9 +69,25 @@ static void F(on_step)(toy_t *t)
     toy_note(t, deg, 0, t->step_ms * every * 3 / 4);
 }
 
-TOY(toy_cartridge, "cartridge", "Cursed Cartridge", "chip", ROLE_LEAD, HUE_GO, 0, 2,
-    "An old video game tune that sticks, repeats and leaps where it should not.",
-    cartridge_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the tune as a row of pixels, one a note; where it sticks the same pixel repeats in
+ * colour; a wrong leap jumps the pixel out of line */
+static void F(draw)(toy_t *t)
+{
+    cartridge_t *s = ST(cartridge_t);
+    static const uint8_t EVERY[2] = {2, 1}, LEN[2] = {16, 32};
+    int len = LEN[P(LENGTH)], i, now = (t->steps / EVERY[P(SPEED)]) % len, w = 224 / len;
+    for (i = 0; i < len; i++) {
+        int y = 120 - s->tune[i] * 7, cur = i == now && t->playing;
+        cv_rect(8 + i * w, y, w - 1, 6, cur ? (s->stuck ? pic_hue : K_TEXT) : K_SOFT);
+        if (cur && s->stuck)
+            cv_rect(8 + i * w, 120 - s->stuck_deg * 7 + toy_root(t, 0) * 7, w - 1, 6, pic_hue);
+    }
+    cv_rect(8 + now * w, 8, w - 1, 3, t->playing ? pic_hue : K_SAND);
+}
+#endif
+
+TOY(toy_cartridge, "cartridge", "Cursed Cartridge", "chip", ROLE_LEAD, HUE_GO, 0, 2, "An old video game tune that sticks, repeats and leaps where it should not.", cartridge_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef STICKS
 #undef LEAPS
 #undef SPEED

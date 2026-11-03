@@ -73,9 +73,22 @@ static void F(frame)(toy_t *t, int ms)
         s->lvl += imax(-6, imin(6, s->want - s->lvl));
 }
 
-TOY(toy_undertow, "undertow", "Undertow", "wave", ROLE_BASS, HUE_BLUE, 40, 0,
-    "A deep sub bass. Long notes arrive just after the kick, with a slow wobble.",
-    undertow_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a wave that sits at the note's height, rippling while the note sounds, flat in the rests */
+static void F(draw)(toy_t *t)
+{
+    undertow_t *s = ST(undertow_t);
+    static const int8_t SIN[16] = {0, 24, 45, 59, 64, 59, 45, 24, 0, -24, -45, -59, -64, -59, -45, -24};
+    int i, on = t->playing && s->left > 0, ph = s->ph / 60;
+    uint16_t c = on ? pic_hue : K_TEXT;
+    for (i = 0; i < 32; i++) {
+        int y = (s->lvl - 26) * 3 / 4 + s->amp * 3 / 4 * SIN[(i + ph / 4) & 15] / 64;
+        cv_rect(i * 8 - 1, y - 1, 8, 3, c);
+    }
+}
+#endif
+
+TOY(toy_undertow, "undertow", "Undertow", "wave", ROLE_BASS, HUE_BLUE, 40, 0, "A deep sub bass. Long notes arrive just after the kick, with a slow wobble.", undertow_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef HOLD
 #undef WOBBLE
 #undef MOVES

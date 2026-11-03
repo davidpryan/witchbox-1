@@ -83,9 +83,29 @@ static void F(frame)(toy_t *t, int ms)
         s->gape = imax(0, s->gape - 2);
 }
 
-TOY(toy_screwed, "screwed", "Screwed Voice", "face", ROLE_VOICE, HUE_PURPLE, 40, 1,
-    "A voice pitched far down, sliding into each long note, muttering in between.",
-    screwed_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a face that sags lower the lower the note, going from white to the colour; eyes that
+ * shut for a mumble; a mouth that opens slowly, with Slur, and shuts before the next note */
+static void F(draw)(toy_t *t)
+{
+    screwed_t *s = ST(screwed_t);
+    int low = imax(0, imin(16, 2 - s->n)), sag = low * 2, w = 90, x = 120 - w / 2, top = 4;
+    uint16_t c = low >= 11 ? pic_hue : low >= 5 ? K_SOFT : K_TEXT;
+    int h = 4 + s->gape * 3 / 4, ex;
+    pic_rrect(x, top, w, 100 + sag, 16, c);
+    pic_rrect(x + 4, top + 4, w - 8, 92 + sag, 12, K_BG);
+    for (ex = 0; ex < 2; ex++) {
+        int exx = ex ? 120 + 10 : 120 - 20;
+        if (s->blink > 0)
+            cv_rect(exx, top + 34, 9, 2, c);
+        else
+            cv_rect(exx, top + 30, 9, 8, c);
+    }
+    pic_rrect(120 - 12, top + 58 + sag / 2, 24, h, imin(6, h / 2), c);
+}
+#endif
+
+TOY(toy_screwed, "screwed", "Screwed Voice", "face", ROLE_VOICE, HUE_PURPLE, 40, 1, "A voice pitched far down, sliding into each long note, muttering in between.", screwed_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef DEPTH
 #undef DRAWL
 #undef SLUR

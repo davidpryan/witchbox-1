@@ -10,7 +10,11 @@ static const uint8_t SH_WAIT[3] = {8, 16, 32};
 static const char *const SH_WAY_N[2] = {"Harmony", "Echo"};
 static const char *const SH_GAP_N[3] = {"Third", "Sixth", "Octave"};
 static const char *const SH_DELAY_N[3] = {"1/2 bar", "1 bar", "2 bars"};
-typedef struct { int seen, last, q_due[16], q_n[16], nq; } shadow_t;
+#define SH_EMPTY (-128)
+typedef struct {
+    int seen, last, q_due[16], q_n[16], nq;
+    int8_t heard[32], mine[32]; uint8_t hkind[32];      /* the picture's lanes: a note a column, or SH_EMPTY */
+} shadow_t;
 #define WAY 0
 #define GAP 1
 #define DELAY 2
@@ -19,12 +23,15 @@ typedef struct { int seen, last, q_due[16], q_n[16], nq; } shadow_t;
 static void F(make)(toy_t *t)
 {
     shadow_t *s = ST(shadow_t);
+    int k;
     add_pick(t, "Mode", 2, 0, SH_WAY_N, "Play along with the lead, or after it");
     add_pick(t, "Interval", 3, 0, SH_GAP_N, "How far below the lead it sings");
     add_pick(t, "Delay", 3, 1, SH_DELAY_N, "In Echo, how long after the lead");
     add(t, "Thin", 0, 10, 2, "The chance that a note is left out");
     s->seen = S.leads;
     s->last = -2 * BAR;
+    for (k = 0; k < 32; k++)
+        s->heard[k] = s->mine[k] = SH_EMPTY;
 }
 
 static void F(randomise)(toy_t *t)
@@ -56,12 +63,15 @@ static void F(sing)(toy_t *t, int n)   /* one of our own notes; we are a lead to
         return;
     toy_note(t, n, 0, 0);
     s->seen = S.leads;
+    s->mine[t->steps % 32] = (int8_t)imax(-127, imin(127, n));
 }
 
 static void F(on_step)(toy_t *t)
 {
     shadow_t *s = ST(shadow_t);
-    int st = t->steps, heard = 0, hn = 0;
+    int st = t->steps, heard = 0, hn = 0, col = st % 32;
+    s->heard[(col + 2) % 32] = s->mine[(col + 2) % 32] = SH_EMPTY;   /* the wipe runs two columns ahead */
+    s->heard[col] = s->mine[col] = SH_EMPTY;
     if (S.leads != s->seen) {       /* a lead toy has played */
         s->seen = S.leads;
         s->last = st;
@@ -74,6 +84,8 @@ static void F(on_step)(toy_t *t)
         hn = toy_root(t, 0) + 4;    /* no lead: the chord's top note */
     }
     if (heard) {
+        s->heard[col] = (int8_t)imax(-127, imin(127, hn));
+        s->hkind[col] = (uint8_t)(S.leads == s->seen && st - s->last >= 2 * BAR);   /* 1: no lead, the chord's top */
         if (P(WAY) == 0) {
             F(sing)(t, hn - SH_BELOW[P(GAP)]);
         } else if (s->nq < 16) {
@@ -92,9 +104,31 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_shadow, "shadow", "Shadow", "shadow", ROLE_LEAD, HUE_BLUE, 0, 1,
-    "A second line that follows the band's lead, below it or after it.",
-    shadow_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: two lanes, two bars long: what the lead played above, and the shadow's own notes
+ * below, in colour; the columns are wiped a little ahead of the step */
+static void F(draw)(toy_t *t)
+{
+    shadow_t *s = ST(shadow_t);
+    int lane, col;
+    cv_text(4, 24, &FONT_XS, "LEAD", K_SOFT);
+    cv_text(4, 94, &FONT_XS, "SHADOW", K_SOFT);
+    for (lane = 0; lane < 2; lane++) {
+        int top = lane ? 74 : 4;
+        cv_rect(48, top + 66, 192, 1, K_SAND);
+        for (col = 0; col < 32; col++) {
+            int8_t v = lane ? s->mine[col] : s->heard[col];
+            int n;
+            if (v == SH_EMPTY)
+                continue;
+            n = imax(0, imin(21, v));
+            cv_rect(48 + col * 6, top + 66 - 4 - n * 3, 5, 3, lane ? pic_hue : s->hkind[col] ? K_SOFT : K_TEXT);
+        }
+    }
+}
+#endif
+
+TOY(toy_shadow, "shadow", "Shadow", "shadow", ROLE_LEAD, HUE_BLUE, 0, 1, "A second line that follows the band's lead, below it or after it.", shadow_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef WAY
 #undef GAP
 #undef DELAY

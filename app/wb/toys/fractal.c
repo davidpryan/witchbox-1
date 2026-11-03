@@ -72,9 +72,22 @@ static void F(on_step)(toy_t *t)
     toy_note(t, deg, 0, 0);
 }
 
-TOY(toy_fractal, "fractal", "Fractal", "fractal", ROLE_LEAD, HUE_CYAN, 0, 3,
-    "A motif applied to itself: the motif, played from each of its own notes, and that again one level deeper.",
-    fractal_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the whole tune as a skyline, so the motif shows inside itself at every level; the
+ * note sounding lit; the motif alone drawn big at the right */
+static void F(draw)(toy_t *t)
+{
+    fractal_t *s = ST(fractal_t);
+    int i, now = (t->steps / P(RATE)) % s->n, w = imax(1, 180 / s->n), m = P(SIZE);
+    for (i = 0; i < s->n && i * w < 180; i++)
+        cv_rect(6 + i * w, 90 - s->tune[i] * 4, w > 2 ? w - 1 : 1, 4, i == now && t->playing ? pic_hue : K_TEXT);
+    for (i = 0; i < m; i++)
+        cv_rect(196 + i * 10, 60 - s->motif[i] * 6, 8, 5, K_SOFT);
+    cv_text(196, 124, &FONT_XS, "MOTIF", K_DIM);
+}
+#endif
+
+TOY(toy_fractal, "fractal", "Fractal", "fractal", ROLE_LEAD, HUE_CYAN, 0, 3, "A motif applied to itself: the motif, played from each of its own notes, and that again one level deeper.", fractal_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef SIZE
 #undef DEPTH
 #undef REACH

@@ -61,9 +61,26 @@ static void F(on_step)(toy_t *t)
         }
 }
 
-TOY(toy_culling, "culling", "Culling", "lots", ROLE_CONDUCTOR, HUE_RED, 0, 3,
-    "A conductor. Every phrase draws lots: each seat may be cut for the phrase, so the band thins and fills at random.",
-    culling_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, 0, F(close));
+#ifdef WB_PICTURES
+/* the picture: a bar for each seat, white while it plays and dark for the phrase it is cut; the phrase
+ * as a line that runs out to the next draw */
+static void F(draw)(toy_t *t)
+{
+    int i, n = S.band ? SEATS : 4, period = CU_EVERY[P(EVERY)], at = toy_now(t) % period;
+    for (i = 0; i < n; i++) {
+        int x = pic_col(i, n, 9), w = n > 4 ? 20 : 33, role = S.band ? S.roles[i] : ROLE_NONE;
+        uint16_t c = S.cuts[i] ? K_PANEL : role != ROLE_NONE || !S.band ? K_TEXT : K_SAND;
+        cv_rect(x - w / 2, 16, w, 90, c);
+        if (S.cuts[i])
+            cv_line(x - w / 2, 16, x + w / 2, 106, pic_hue), cv_line(x + w / 2, 16, x - w / 2, 106, pic_hue);
+    }
+    cv_rect(12, 124, 216, 3, K_PANEL);
+    cv_rect(12, 124, (period - at) * 216 / period, 3, pic_hue);
+    (void)t;
+}
+#endif
+
+TOY(toy_culling, "culling", "Culling", "lots", ROLE_CONDUCTOR, HUE_RED, 0, 3, "A conductor. Every phrase draws lots: each seat may be cut for the phrase, so the band thins and fills at random.", culling_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), F(close));
 #undef CHANCE
 #undef EVERY
 #undef SPARE

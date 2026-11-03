@@ -62,9 +62,24 @@ static void F(frame)(toy_t *t, int ms)
     s->turn ^= 1;
 }
 
-TOY(toy_reese, "reese", "Reese", "twist", ROLE_BASS, HUE_BLUE, 30, 0,
-    "A growling bass made of two notes rubbing together, in slow short phrases.",
-    reese_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: two lines, the same curve one way up and the other, crossing as they drift apart
+ * with Detune; in colour while a note sounds */
+static void F(draw)(toy_t *t)
+{
+    reese_t *s = ST(reese_t);
+    static const int8_t SIN[16] = {0, 24, 45, 59, 64, 59, 45, 24, 0, -24, -45, -59, -64, -59, -45, -24};
+    int i, k, amp = 33 - P(DARK) * 2, ph = s->ph / 50;
+    uint16_t c = s->on && t->playing ? pic_hue : K_TEXT;
+    for (k = 0; k < 2; k++)
+        for (i = 0; i < 32; i++) {
+            int a = k ? -amp : amp, y = 72 + a * SIN[((i * 3 + ph) / 4) & 15] / 64;
+            cv_rect(i * 8 - 1, y - 2, 8, 4, c);
+        }
+}
+#endif
+
+TOY(toy_reese, "reese", "Reese", "twist", ROLE_BASS, HUE_BLUE, 30, 0, "A growling bass made of two notes rubbing together, in slow short phrases.", reese_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef DETUNE
 #undef PHRASE
 #undef DARK

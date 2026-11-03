@@ -1,14 +1,14 @@
 # The Witch III shelf: every one of its twenty toys plays, a band of them with both conductors
 # sounds sane, and the shelf's third page lists them.
 wait 100
-seat 1 heart 1234
-seat 2 bodybass 77
-seat 3 afterhours 5
-seat 4 hexbell 9
-seat 5 storm 3
-seat 6 toll 8
-seat 7 fog 1
-seat 8 dubout 2
+seat 0 heart 1234
+seat 1 bodybass 77
+seat 2 afterhours 5
+seat 3 hexbell 9
+seat 4 storm 3
+seat 5 toll 8
+seat 6 fog 1
+seat 7 dubout 2
 expect seated 8
 wav witch3.wav
 tap PLAY
@@ -21,23 +21,23 @@ wavstop
 tap PLAY
 wait 100
 # the other twelve, as a second band
-seat 1 chopbreak 11
-seat 2 coldwave 12
-seat 3 vespers 13
-seat 4 cartridge 14
-seat 5 murder 15
-seat 6 scrap 16
-seat 7 rattle 17
-seat 8 phonk 18
+seat 0 chopbreak 11
+seat 1 coldwave 12
+seat 2 vespers 13
+seat 3 cartridge 14
+seat 4 murder 15
+seat 5 scrap 16
+seat 6 rattle 17
+seat 7 phonk 18
 tap PLAY
 wait 8000
 expect notes >200
 tap PLAY
 wait 100
-seat 1 drip 21
-seat 2 graveyard 22
-seat 3 shiver 23
-seat 4 helium 24
+seat 0 drip 21
+seat 1 graveyard 22
+seat 2 shiver 23
+seat 3 helium 24
 tap PLAY
 wait 8000
 expect notes >300

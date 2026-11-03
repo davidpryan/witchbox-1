@@ -65,9 +65,29 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_hexbell, "hexbell", "Hex Bell", "bell", ROLE_LEAD, HUE_YELLOW, 0, 2,
-    "A short tune on a bright bell, then a long silence, then the tune again.",
-    hexbell_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the tune's notes as bells hung round a ring, lit as each is struck; then the long
+ * silence runs round the ring as a dimming arc */
+static void F(draw)(toy_t *t)
+{
+    hexbell_t *s = ST(hexbell_t);
+    static const uint8_t SIL[3] = {16, 32, 64};
+    int n = P(NOTES), cycle = n * 2 + SIL[P(SILENCE)], at = toy_now(t) % cycle, i, cx = 120, cy = 72;
+    for (i = 0; i < n; i++) {
+        int a = (i * 32 / n) & 31, x = cx + 46 * PIC_SIN[a] / 100, y = cy - 46 * PIC_SIN[(a + 8) & 31] / 100;
+        int lit = at / 2 == i && at < n * 2 && t->playing;
+        cv_rect(x - 3, y - 9 - s->tune[i] / 2, 6, 10 + s->tune[i] / 2, lit ? pic_hue : K_TEXT);
+        pic_disc(x, y + 3, 5, lit ? pic_hue : K_TEXT);
+    }
+    if (at >= n * 2) {
+        int gone = (at - n * 2) * 32 / (cycle - n * 2), k;
+        for (k = 0; k < 32 - gone; k++)
+            pic_disc(cx + 62 * PIC_SIN[k] / 100, cy - 62 * PIC_SIN[(k + 8) & 31] / 100, 1, K_SAND);
+    }
+}
+#endif
+
+TOY(toy_hexbell, "hexbell", "Hex Bell", "bell", ROLE_LEAD, HUE_YELLOW, 0, 2, "A short tune on a bright bell, then a long silence, then the tune again.", hexbell_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef NOTES
 #undef SILENCE
 #undef LEAP

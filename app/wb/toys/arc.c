@@ -115,9 +115,30 @@ static void F(on_step)(toy_t *t)
         F(set)(t);
 }
 
-TOY(toy_arc, "arc", "Arc", "graph", ROLE_CONDUCTOR, HUE_PURPLE, 0, 1,
-    "The song's shape: intro, build, drop, break, drop, outro, each part following the line.",
-    arc_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, 0, F(close));
+#ifdef WB_PICTURES
+/* the picture: the song's line, intro to outro, with a dot where the song is now; the sections named
+ * under it; each seat's level as a bar at the right */
+static void F(draw)(toy_t *t)
+{
+    arc_t *s = ST(arc_t);
+    static const char *const NAMES[6] = {"INT", "BLD", "DRP", "BRK", "DRP", "OUT"};
+    int x, gw = 180, i, where = F(where)(t), n = S.band ? SEATS : 4;
+    for (x = 0; x < gw; x++) {
+        int y = (s->ys[x * AR_GW / gw] - 26) * 3 / 4, y2 = (s->ys[imin(AR_GW, (x + 1) * AR_GW / gw)] - 26) * 3 / 4;
+        cv_rect(6 + x, imin(y, y2), 1, iabs(y2 - y) + 2, K_TEXT);
+    }
+    for (i = 0; i < 6; i++)
+        cv_text(6 + i * 30 + 6, 128, &FONT_XS, NAMES[i], K_SOFT);
+    pic_disc(6 + where * gw / AR_GW, (s->ys[where] - 26) * 3 / 4, 3, pic_hue);
+    for (i = 0; i < n; i++) {
+        int v = S.levels[i], h = v * 96 / 100, bx = 196 + i * (n > 4 ? 5 : 10), bw = n > 4 ? 4 : 7;
+        cv_rect(bx, 16, bw, 96 - h, K_SAND);
+        cv_rect(bx, 16 + 96 - h, bw, h, K_TEXT);
+    }
+}
+#endif
+
+TOY(toy_arc, "arc", "Arc", "graph", ROLE_CONDUCTOR, HUE_PURPLE, 0, 1, "The song's shape: intro, build, drop, break, drop, outro, each part following the line.", arc_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), F(close));
 #undef SHAPE
 #undef SIZE
 #undef CONTRAST

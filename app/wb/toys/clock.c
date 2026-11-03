@@ -83,9 +83,29 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_clock, "clock", "Broken Clock", "clock", ROLE_DRUMS, HUE_CYAN, 20, 1,
-    "A simple beat that gets stuck and stutters, with steps cut out to silence.",
-    clock_t_, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a clock face of sixteen dots, a hand that sweeps round the bar and judders when a slice
+ * sticks; a hole where a step is cut to silence */
+static void F(draw)(toy_t *t)
+{
+    clock_t_ *s = ST(clock_t_);
+    static const int8_t SIN32[32] = {0, 20, 38, 56, 71, 83, 92, 98, 100, 98, 92, 83, 71, 56, 38, 20,
+                                     0, -20, -38, -56, -71, -83, -92, -98, -100, -98, -92, -83, -71, -56, -38, -20};
+    int i, half = s->togo ? 2 * s->from + s->togo % 2 : 2 * (t->steps % BAR), cx = 120, cy = 72;
+    for (i = 0; i < BAR; i++) {
+        int x = cx + 62 * SIN32[(i * 2) & 31] / 100, y = cy - 62 * SIN32[(i * 2 + 8) & 31] / 100;
+        pic_disc(x, y, i % 4 == 0 ? 3 : 2, s->gone[i] ? K_BG : K_TEXT);
+    }
+    {
+        int x = cx + 46 * SIN32[half & 31] / 100, y = cy - 46 * SIN32[(half + 8) & 31] / 100, k;
+        for (k = -1; k <= 1; k++)
+            cv_line(cx + k, cy, x + k, y, s->togo ? pic_hue : K_TEXT);
+    }
+    pic_disc(cx, cy, 4, K_TEXT);
+}
+#endif
+
+TOY(toy_clock, "clock", "Broken Clock", "clock", ROLE_DRUMS, HUE_CYAN, 20, 1, "A simple beat that gets stuck and stutters, with steps cut out to silence.", clock_t_, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef STUTTER
 #undef SLICE
 #undef REPS

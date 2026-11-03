@@ -58,9 +58,29 @@ static void F(on_step)(toy_t *t)
         toy_note(t, 0, 3, 0);
 }
 
-TOY(toy_scrap, "scrap", "Scrapyard", "gears", ROLE_DRUMS, HUE_GREY, 0, 2,
-    "Machines for drums: clanks of tin, glass and wood, each on a cycle of its own.",
-    scrap_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: three gears, tin, glass and wood, one tooth per step of its cycle, turning as the
+ * clock goes; a gear flashes when its tooth strikes */
+static void F(draw)(toy_t *t)
+{
+    scrap_t *s = ST(scrap_t);
+    static const uint8_t X[3] = {42, 120, 198};
+    int m;
+    for (m = 0; m < 3; m++) {
+        int period = P(m), r = 14 + period * 2, i, at = (toy_now(t) + s->off[m]) % period, k;
+        uint16_t c = pic_ago(t, m) < 110u ? pic_hue : K_TEXT;
+        if (P(MESH) == 2) period = period * 3 / 2;
+        for (i = 0; i < period; i++) {
+            int a = (i * 32 / period - at * 32 / period + 24) & 31;
+            pic_disc(X[m] + (r + 4) * PIC_SIN[a] / 100, 72 - (r + 4) * PIC_SIN[(a + 8) & 31] / 100, 2, i == 0 ? pic_hue : c);
+        }
+        pic_ring(X[m], 72, r, r - 4, c);
+        for (k = 0; k < 2; k++) (void)k;
+    }
+}
+#endif
+
+TOY(toy_scrap, "scrap", "Scrapyard", "gears", ROLE_DRUMS, HUE_GREY, 0, 2, "Machines for drums: clanks of tin, glass and wood, each on a cycle of its own.", scrap_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef TIN
 #undef GLASS
 #undef WOOD

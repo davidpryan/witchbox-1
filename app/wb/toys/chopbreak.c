@@ -80,9 +80,28 @@ static void F(on_step)(toy_t *t)
         toy_note(t, 0, 4, 0);
 }
 
-TOY(toy_chopbreak, "chopbreak", "Chopped Break", "chop", ROLE_DRUMS, HUE_ORANGE, 0, 2,
-    "A drum break cut into eight slices and put back in the wrong order.",
-    chopbreak_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the break's eight slices as blocks in the order they now play, each with the number of
+ * the slice it really is; the slot playing is lit, a repeat shows twice */
+static void F(draw)(toy_t *t)
+{
+    chopbreak_t *s = ST(chopbreak_t);
+    static const uint8_t WAVE[8] = {60, 30, 48, 26, 56, 34, 52, 40};
+    int i, now = (t->steps % BAR) / 2;
+    char b[4];
+    for (i = 0; i < 8; i++) {
+        int x = 8 + i * 29, slice = s->order[i], h = WAVE[slice];
+        uint16_t c = i == now && t->playing ? pic_hue : slice == i ? K_TEXT : K_SOFT;
+        cv_rect(x, 100 - h, 24, h, c);
+        itoa_s(slice + 1, b);
+        cv_text(x + 8, 108, &FONT_XS, b, i == now && t->playing ? pic_hue : K_DIM);
+    }
+    if (s->hold >= 0)
+        cv_text(8, 126, &FONT_XS, "REPEAT", K_SOFT);
+}
+#endif
+
+TOY(toy_chopbreak, "chopbreak", "Chopped Break", "chop", ROLE_DRUMS, HUE_ORANGE, 0, 2, "A drum break cut into eight slices and put back in the wrong order.", chopbreak_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef SWAPS
 #undef SHUFFLE
 #undef REPEATS

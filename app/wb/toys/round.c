@@ -62,9 +62,24 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_round, "round", "Round", "harp", ROLE_CHORDS, HUE_YELLOW, 0, 3,
-    "A harp line through the chord played as a canon: each voice enters a little after the last.",
-    round_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the line as a staircase of notes, once for each voice, each a little after the last,
+ * the voices stepping on top of each other; the notes sounding lit */
+static void F(draw)(toy_t *t)
+{
+    round_t *s = ST(round_t);
+    int v, k, now = t->steps, delay = RD_DELAY[P(DELAY)];
+    for (v = 0; v < P(VOICES); v++) {
+        int at = now - v * delay, cur = at >= 0 ? (at / 2) % BAR : -1;
+        for (k = 0; k < 8; k++) {
+            int x = 12 + k * 26 + v * 3, y = 118 - s->line[k] * 5 - v * 4;
+            cv_rect(x, y, 20, 3, k == cur && t->playing ? pic_hue : v == 0 ? K_TEXT : K_SOFT);
+        }
+    }
+}
+#endif
+
+TOY(toy_round, "round", "Round", "harp", ROLE_CHORDS, HUE_YELLOW, 0, 3, "A harp line through the chord played as a canon: each voice enters a little after the last.", round_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef VOICES
 #undef DELAY
 #undef SHAPE

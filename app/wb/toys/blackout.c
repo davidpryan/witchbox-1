@@ -96,9 +96,30 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_blackout, "blackout", "Blackout", "bars", ROLE_CONDUCTOR, HUE_PURPLE, 0, 1,
-    "Every so many bars the band is cut, drums first, with a noise swell into the silence.",
-    blackout_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, 0, F(close));
+#ifdef WB_PICTURES
+/* the picture: a bar for each seat, white while it plays, dark while it is cut, grey when empty, its
+ * job written under; the noise swell as a line that climbs beside the bars into the cut */
+static void F(draw)(toy_t *t)
+{
+    blackout_t *s = ST(blackout_t);
+    const uint8_t *roles = F(roles)();
+    int i, n = S.band ? SEATS : 4, y0 = 18, y1 = 104, line = s->line ? (s->line - 26) * 3 / 4 : 0;
+    for (i = 0; i < n; i++) {
+        int x = pic_col(i, n, 9), w = n > 4 ? 20 : 33;
+        uint16_t c = S.cuts[i] ? K_PANEL : roles[i] ? K_TEXT : K_SAND;
+        cv_rect(x - w / 2, y0, w, y1 - y0, c);
+        if (line) {
+            cv_rect(x - w / 2 - 6, line, 5, 2, pic_hue);
+            cv_rect(x + w / 2 + 1, line, 5, 2, pic_hue);
+        }
+        cv_text(x - 14, y1 + 4, &FONT_XS, roles[i] == ROLE_DRUMS ? "DRUM" : roles[i] == ROLE_BASS ? "BASS" :
+                roles[i] == ROLE_CHORDS ? "CHRD" : roles[i] == ROLE_LEAD ? "LEAD" : roles[i] == ROLE_VOICE ? "VOX" :
+                roles[i] == ROLE_TEXTURE ? "TEX" : roles[i] == ROLE_CONDUCTOR ? "CND" : "-", K_SOFT);
+    }
+}
+#endif
+
+TOY(toy_blackout, "blackout", "Blackout", "bars", ROLE_CONDUCTOR, HUE_PURPLE, 0, 1, "Every so many bars the band is cut, drums first, with a noise swell into the silence.", blackout_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), F(close));
 #undef EVERY
 #undef LONG
 #undef DEPTH

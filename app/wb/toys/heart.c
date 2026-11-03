@@ -50,9 +50,31 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_heart, "heart", "Heartbeat", "heart", ROLE_DRUMS, HUE_RED, 0, 2,
-    "Only a kick drum, beating like a heart. Now and then it flutters or misses.",
-    heart_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a heart trace, scrolling: a tall spike for every lub, a short one for a dub, flat where
+ * it missed */
+static void F(draw)(toy_t *t)
+{
+    uint32_t now = plat_ms(), i;
+    int last = -1;
+    pic_hline(0, 240, 80, K_TEXT);
+    for (i = 0; i < NOTE_LOG; i++) {
+        const note_log_t *l = &note_log[i];
+        int x, h;
+        if (!l->at || l->seat != (uint8_t)t->seat || now - l->at > 6000u)
+            continue;
+        x = 232 - (int)((now - l->at) * 232u / 6000u);
+        h = l->voice == 0 ? 52 : 22;
+        cv_line(x - 4, 80, x - 1, 80 - h, now - l->at < 150u ? pic_hue : K_TEXT);
+        cv_line(x - 1, 80 - h, x + 2, 80 + h / 3, now - l->at < 150u ? pic_hue : K_TEXT);
+        cv_line(x + 2, 80 + h / 3, x + 5, 80, now - l->at < 150u ? pic_hue : K_TEXT);
+        (void)last;
+    }
+    pic_disc(232, 80, pic_ago(t, 0) < 120u ? 5 : 3, pic_hue);
+}
+#endif
+
+TOY(toy_heart, "heart", "Heartbeat", "heart", ROLE_DRUMS, HUE_RED, 0, 2, "Only a kick drum, beating like a heart. Now and then it flutters or misses.", heart_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef PACE
 #undef DUB
 #undef FLUTTER

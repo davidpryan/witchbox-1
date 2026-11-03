@@ -71,9 +71,27 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_haunting, "haunting", "Haunting", "ghost", ROLE_LEAD, HUE_GREY, 0, 3,
-    "A whistled note now and then, and every note comes back lower a few steps later, and that one too.",
-    haunting_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: every note as a dot that drops a step each time it comes back, fading as its life runs
+ * out: chains of ghosts falling */
+static void F(draw)(toy_t *t)
+{
+    haunting_t *s = ST(haunting_t);
+    int i, root = toy_root(t, 0);
+    for (i = 0; i < s->n; i++) {
+        int x = 20 + i * 200 / HN_Q + (HN_Q - i) * 3, y = 124 - (s->deg[i] + 7) * 5, life = s->life[i];
+        int k;
+        pic_disc(x, y, 3, life > 2 ? K_TEXT : life > 1 ? K_SOFT : K_SAND);
+        for (k = 1; k < life && k < 4; k++)
+            pic_disc(x, y + k * P(FALL) * 5 + k * 2, 1, K_SAND);
+    }
+    if (pic_ago(t, 0) < 120u)
+        pic_disc(224, 124 - 14 * 5, 5, pic_hue);
+    (void)root;
+}
+#endif
+
+TOY(toy_haunting, "haunting", "Haunting", "ghost", ROLE_LEAD, HUE_GREY, 0, 3, "A whistled note now and then, and every note comes back lower a few steps later, and that one too.", haunting_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef SEEDS
 #undef DELAY
 #undef FALL

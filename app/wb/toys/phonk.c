@@ -67,9 +67,30 @@ static void F(on_step)(toy_t *t)
         toy_note(t, toy_root(t, 0) + s->deg[i], 2, 0);
 }
 
-TOY(toy_phonk, "phonk", "Phonk Bell", "bell", ROLE_DRUMS, HUE_PURPLE, 0, 2,
-    "A slow, heavy beat with a tune played on a cowbell over it.",
-    phonk_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the bar as sixteen columns: the bell's note on each step as a block at its height,
+ * the kicks and the clap marked under; a playhead */
+static void F(draw)(toy_t *t)
+{
+    phonk_t *s = ST(phonk_t);
+    int i, now = t->steps % BAR;
+    pic_hline(8, 232, 100, K_LINE);
+    for (i = 0; i < BAR; i++) {
+        int x = 8 + i * 14;
+        if (s->on[i])
+            cv_rect(x, 96 - s->deg[i] * 7, 10, 5, i == now && t->playing ? pic_hue : K_TEXT);
+        if (i == 0 || i == 10)
+            cv_rect(x, 106, 10, 8, i == now && t->playing ? pic_hue : K_SOFT);
+        else if (i == 8)
+            cv_rect(x + 2, 106, 6, 8, i == now && t->playing ? pic_hue : K_SOFT);
+        else if (i % 2 == 0)
+            cv_rect(x + 4, 110, 2, 4, K_SAND);
+    }
+    pic_bar(t->steps, BAR);
+}
+#endif
+
+TOY(toy_phonk, "phonk", "Phonk Bell", "bell", ROLE_DRUMS, HUE_PURPLE, 0, 2, "A slow, heavy beat with a tune played on a cowbell over it.", phonk_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef NOTES
 #undef BELL
 #undef HATS

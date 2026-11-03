@@ -48,9 +48,29 @@ static void F(on_step)(toy_t *t)
         toy_note(t, 0, 3, 0);                   /* a tick in the quiet */
 }
 
-TOY(toy_static, "static", "Static", "static", ROLE_TEXTURE, HUE_GREY, 0, 3,
-    "Crackle and rumble driven by 1/f noise: dice rerolled at different rates and summed, with the drift of a bad signal.",
-    static_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the dice as bars, the slow ones at the left, their sum as the signal's level across the
+ * top; pops as specks where the level is high */
+static void F(draw)(toy_t *t)
+{
+    static_t *s = ST(static_t);
+    int k, nd = P(DICE), sum = 0;
+    for (k = 0; k < nd; k++) {
+        sum += s->dice[k];
+        cv_rect(30 + k * 36, 120 - s->dice[k] * 9, 24, s->dice[k] * 9 + 2, k == nd - 1 ? K_SOFT : K_TEXT);
+    }
+    sum = sum * 10 / nd;
+    cv_rect(12, 36 - sum / 5, 216, 2, pic_hue);
+    cv_rect(12, 36 - (40 + (10 - P(POPS)) * 4) / 5, 216, 1, K_LINE);
+    if (pic_ago(t, 0) < 100u)
+        for (k = 0; k < 6; k++)
+            cv_rect(12 + (int)(pic_hash(k, plat_ms() / 100u) % 216u), 20 + (int)(pic_hash(k, 9) % 20u), 2, 2, K_TEXT);
+    cv_text(30, 126, &FONT_XS, "FAST", K_DIM);
+    cv_text(30 + (nd - 1) * 36, 126, &FONT_XS, "SLOW", K_DIM);
+}
+#endif
+
+TOY(toy_static, "static", "Static", "static", ROLE_TEXTURE, HUE_GREY, 0, 3, "Crackle and rumble driven by 1/f noise: dice rerolled at different rates and summed, with the drift of a bad signal.", static_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef DICE
 #undef POPS
 #undef LOW

@@ -95,9 +95,35 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_pocket, "pocket", "Pocket Change", "key", ROLE_DRUMS, HUE_ORANGE, 30, 0,
-    "Keys, coins and clicks dropped around the beat as ghostly percussion.",
-    pocket_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the things, falling faster and faster, one bounce, then lying where they fell */
+static void F(draw)(toy_t *t)
+{
+    pocket_t *s = ST(pocket_t);
+    int i;
+    pic_hline(9, 231, 128, K_SOFT);
+    for (i = 0; i < s->n; i++) {
+        int x = s->x[i] * 3 / 4, at = s->at[i], fall = s->fall[i], y;
+        uint16_t c;
+        if (at < fall)
+            y = 6 + 117 * at / fall * at / fall;
+        else if (at < fall + 260) {
+            int u = at - fall;
+            y = 123 - 21 * 4 * u * (260 - u) / (260 * 260);
+        } else
+            y = 123;
+        c = fall <= at && at < fall + 260 ? pic_hue : K_TEXT;
+        switch (P(KIT)) {
+        case 0: pic_disc(x, y, 3, c); break;
+        case 1: cv_rect(x - 1, y - 4, 3, 8, c); break;
+        case 2: cv_rect(x - 4, y + 1, 8, 3, c); break;
+        default: cv_rect(x - 3, y - 3, 7, 7, c); cv_rect(x - 1, y - 1, 2, 2, K_BG); break;
+        }
+    }
+}
+#endif
+
+TOY(toy_pocket, "pocket", "Pocket Change", "key", ROLE_DRUMS, HUE_ORANGE, 30, 0, "Keys, coins and clicks dropped around the beat as ghostly percussion.", pocket_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef CLUTTER
 #undef KIT
 #undef LATE

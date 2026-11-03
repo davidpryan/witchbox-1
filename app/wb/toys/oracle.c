@@ -67,9 +67,27 @@ static void F(on_step)(toy_t *t)
     toy_note(t, toy_root(t, 0) + 7 + next, 0, 0);
 }
 
-TOY(toy_oracle, "oracle", "Oracle", "oracle", ROLE_LEAD, HUE_PURPLE, 0, 3,
-    "A melody from a chain of chances the seed dealt. Entropy turns one fixed tune into anything goes.",
-    oracle_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the table of chances as a grid, brighter where a step is likelier; the row of the note
+ * just played lit, and the note it chose */
+static void F(draw)(toy_t *t)
+{
+    oracle_t *s = ST(oracle_t);
+    int a, b, n = P(RANGE), cell = 112 / n;
+    for (a = 0; a < n; a++)
+        for (b = 0; b < n; b++) {
+            int w = s->table[a % n][b] + P(ENTROPY) * 2;
+            uint16_t c = w >= 16 ? K_TEXT : w >= 8 ? K_SOFT : w >= 3 ? K_SAND : K_PANEL;
+            if (a == s->last % n)
+                c = b == s->last ? pic_hue : w >= 8 ? K_TEXT : K_SOFT;
+            cv_rect(64 + b * cell, 12 + a * cell, cell - 1, cell - 1, c);
+        }
+    cv_text(4, 12, &FONT_XS, "FROM", K_DIM);
+    cv_text(64, 128, &FONT_XS, "TO", K_DIM);
+}
+#endif
+
+TOY(toy_oracle, "oracle", "Oracle", "oracle", ROLE_LEAD, HUE_PURPLE, 0, 3, "A melody from a chain of chances the seed dealt. Entropy turns one fixed tune into anything goes.", oracle_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef ENTROPY
 #undef RANGE
 #undef RESTS

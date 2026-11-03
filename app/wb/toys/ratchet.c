@@ -78,9 +78,31 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_ratchet, "ratchet", "Ratchet", "ratchet", ROLE_DRUMS, HUE_ORANGE, 10, 3,
-    "A plain beat whose hits now and then ratchet into two, three or four quick strikes.",
-    ratchet_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the bar's hits as blocks; a hit that ratchets splits into its strikes, each lit as it
+ * lands */
+static void F(draw)(toy_t *t)
+{
+    ratchet_t *s = ST(ratchet_t);
+    static const uint8_t DIV[3] = {2, 3, 4};
+    int i, now = t->steps % BAR;
+    for (i = 0; i < BAR; i++) {
+        int x = 8 + i * 14, kind = i == 0 || i == 10 ? 0 : i == 4 || i == 12 ? 1 : i % 2 == 0 ? 2 : -1;
+        int y = kind == 0 ? 96 : kind == 1 ? 64 : 40, h = kind == 0 ? 30 : kind == 1 ? 24 : 14;
+        if (kind < 0)
+            continue;
+        if (i == now && s->left >= 0 && s->voice == kind && pic_ago(t, kind) < 300u && (s->left > 0 || s->gap)) {
+            int n = DIV[P(SPEED)], k;
+            for (k = 0; k < n; k++)
+                cv_rect(x + k * 12 / n, y, 12 / n - 1, h, k < n - s->left ? pic_hue : K_SAND);
+        } else
+            cv_rect(x, y, 11, h, i == now && t->playing ? pic_hue : K_TEXT);
+    }
+    pic_bar(t->steps, BAR);
+}
+#endif
+
+TOY(toy_ratchet, "ratchet", "Ratchet", "ratchet", ROLE_DRUMS, HUE_ORANGE, 10, 3, "A plain beat whose hits now and then ratchet into two, three or four quick strikes.", ratchet_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef RATCHETS
 #undef SPEED
 #undef WHERE

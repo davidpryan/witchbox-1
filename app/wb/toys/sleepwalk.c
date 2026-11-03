@@ -52,9 +52,29 @@ static void F(on_step)(toy_t *t)
     toy_note(t, deg, 0, 0);
 }
 
-TOY(toy_sleepwalk, "sleepwalk", "Sleepwalk", "walk", ROLE_BASS, HUE_BLUE, 0, 3,
-    "A random walk on the chord's notes, with momentum and a pull back to the root.",
-    sleepwalk_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the walk as a path: the chord's notes as rungs, the walker as a dot on its rung, the way
+ * it came as a fading trail; an arrow for the way it is going */
+static void F(draw)(toy_t *t)
+{
+    sleepwalk_t *s = ST(sleepwalk_t);
+    uint32_t now = plat_ms(), i;
+    int root = toy_root(t, 0) - 7, k, y;
+    for (k = -5; k <= 7; k++)
+        cv_rect(16, 112 - (k + 5) * 8, 208, 1, ((k + 70) % 7 == 0 || (k + 70) % 7 == 2 || (k + 70) % 7 == 4) ? K_LINE : K_PANEL);
+    for (i = 0; i < NOTE_LOG; i++) {
+        const note_log_t *l = &note_log[i];
+        if (!l->at || l->seat != (uint8_t)t->seat || now - l->at > 5000u)
+            continue;
+        cv_rect(200 - (int)((now - l->at) * 180u / 5000u), 112 - (l->degree - root + 5) * 8 - 1, 6, 3, K_SOFT);
+    }
+    y = 112 - (s->deg - root + 5) * 8;
+    pic_disc(204, y, pic_ago(t, -1) < 120u ? 6 : 4, pic_hue);
+    cv_rect(214, y - (s->dir > 0 ? 6 : -4), 2, 6, K_SOFT);
+}
+#endif
+
+TOY(toy_sleepwalk, "sleepwalk", "Sleepwalk", "walk", ROLE_BASS, HUE_BLUE, 0, 3, "A random walk on the chord's notes, with momentum and a pull back to the root.", sleepwalk_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef STEP
 #undef MOMENTUM
 #undef RATE

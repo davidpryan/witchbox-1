@@ -53,9 +53,30 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_chimes, "chimes", "Chimes", "chimes", ROLE_TEXTURE, HUE_CYAN, 0, 3,
-    "Wind chimes. Gusts come at random and each sets off a cluster of bell notes that dies away.",
-    chimes_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: chimes hung from a bar, longer for lower notes, each swinging when struck; the gust as
+ * a breath of lines across them */
+static void F(draw)(toy_t *t)
+{
+    chimes_t *s = ST(chimes_t);
+    int8_t tones[12];
+    int root = toy_root(t, 0) + P(HIGH) * 7 / 10, n = tune_tones(root, root, root + 9, tones), i;
+    if (n > P(CHIMES)) n = P(CHIMES);
+    cv_rect(40, 10, 160, 3, K_TEXT);
+    for (i = 0; i < n; i++) {
+        int x = pic_col(i, n, 50), len = 60 + (9 - (tones[i] - root)) * 5;
+        uint32_t ago = pic_ago_deg(t, tones[i]);
+        int sw = ago < 800u ? PIC_SIN[(ago / 25u) & 31] * (int)(800u - ago) / 100 / 160 : 0;
+        cv_rect(x, 13, 1, 8, K_SOFT);
+        cv_rect(x - 3 + sw, 21, 6, len, ago < 150u ? pic_hue : K_TEXT);
+    }
+    if (s->gust > 0)
+        for (i = 0; i < 4; i++)
+            cv_rect(10 + i * 8 + (int)((plat_ms() / 10u) % 200u), 30 + i * 22, 24, 1, K_SOFT);
+}
+#endif
+
+TOY(toy_chimes, "chimes", "Chimes", "chimes", ROLE_TEXTURE, HUE_CYAN, 0, 3, "Wind chimes. Gusts come at random and each sets off a cluster of bell notes that dies away.", chimes_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef WIND
 #undef CHIMES
 #undef CLUSTER

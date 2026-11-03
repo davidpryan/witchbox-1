@@ -123,9 +123,27 @@ static void F(play_changed)(toy_t *t)
     s->pass = 0;
 }
 
-TOY(toy_hook, "hook", "Hook Machine", "hook", ROLE_LEAD, HUE_RED, 0, 0,
-    "Writes a two-bar riff, plays it three times, then changes it on the fourth.",
-    hook_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the riff as a two-bar roll, a bar per note as long as it is held; the fourth pass's
+ * changed notes in colour; a sweep line on the step; four pips for the passes */
+static void F(draw)(toy_t *t)
+{
+    hook_t *s = ST(hook_t);
+    int st, top = HK_REACH[P(REACH)], now = t->steps % HK_LEN, i;
+    for (st = 0; st < HK_LEN; st++) {
+        int n = s->alt[st] >= 0 ? s->alt[st] : s->riff[st];
+        if (n < 0)
+            continue;
+        cv_rect(4 + st * 7, 118 - n * 100 / top, s->hold[st] * 7 - 2, 4, s->alt[st] >= 0 ? pic_hue : K_TEXT);
+    }
+    if (t->playing)
+        cv_rect(4 + now * 7, 6, 2, 118, pic_hue);
+    for (i = 0; i < 4; i++)
+        cv_rect(100 + i * 11, 134, 8, 5, i == s->pass && t->playing ? pic_hue : K_SAND);
+}
+#endif
+
+TOY(toy_hook, "hook", "Hook Machine", "hook", ROLE_LEAD, HUE_RED, 0, 0, "Writes a two-bar riff, plays it three times, then changes it on the fourth.", hook_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef BUSY
 #undef REACH
 #undef VARY

@@ -81,9 +81,28 @@ static void F(play_changed)(toy_t *t)
         s->hot = s->tick = -1;
 }
 
-TOY(toy_rave, "rave", "Rave Stab", "stab", ROLE_CHORDS, HUE_RED, 40, 1,
-    "Short chord stabs in a jumpy pattern, like an old rave sample played on a keyboard.",
-    rave_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: each stab as a stack of bars, one a note of the chord's shape, at the riff's height;
+ * wider the longer it is held; the one sounding in colour; a step marker underneath */
+static void F(draw)(toy_t *t)
+{
+    rave_t *s = ST(rave_t);
+    static const int8_t SHAPES[3][4] = {{0, 2, 4, -1}, {0, 2, 4, 6}, {0, 3, 4, -1}};
+    static const int8_t LIFT[16] = {0, 0, 0, 2, 0, 0, 2, 4, 0, 0, 0, 2, 0, 4, 2, -1};
+    int st, k, w = 4 + P(HOLD) * 3 / 4;
+    for (st = 0; st < BAR; st++) {
+        int x = 8 + st * 14;
+        if (s->stab[st]) {
+            int y = 110 - (s->root + LIFT[st]) * 7;
+            for (k = 0; k < 4 && SHAPES[P(SHAPE)][k] >= 0; k++)
+                cv_rect(x, y - SHAPES[P(SHAPE)][k] * 6, w, 4, st == s->hot ? pic_hue : K_TEXT);
+        }
+        cv_rect(x, 132, 12, 3, st == s->tick ? pic_hue : st % 4 == 0 ? K_SOFT : K_SAND);
+    }
+}
+#endif
+
+TOY(toy_rave, "rave", "Rave Stab", "stab", ROLE_CHORDS, HUE_RED, 40, 1, "Short chord stabs in a jumpy pattern, like an old rave sample played on a keyboard.", rave_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef HITS
 #undef PUSH
 #undef SHAPE

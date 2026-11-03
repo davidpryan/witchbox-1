@@ -92,9 +92,23 @@ static void F(play_changed)(toy_t *t)
         s->lit = -1;
 }
 
-TOY(toy_bitarp, "bitarp", "Bitcrush Arp", "pixels", ROLE_LEAD, HUE_GO, 20, 0,
-    "A crunchy arpeggio so fast it blurs into a chord, with glitchy repeats.",
-    bitarp_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: sixteen pixels in a staircase of chord notes, wider with Pulse and taller with Crush,
+ * the one sounding in colour */
+static void F(draw)(toy_t *t)
+{
+    bitarp_t *s = ST(bitarp_t);
+    static const int8_t STAIR[8] = {0, 1, 2, 3, 4, 3, 2, 1};
+    int8_t tones[16];
+    int n = tune_tones(s->root, 0, 20, tones), i, w = 3 + P(PULSE), h = 5 + P(CRUSH) * 3 / 4;
+    for (i = 0; i < 16; i++) {
+        int note = tones[imin(n - 1, STAIR[i % 8])], y = 126 - note * 9, x = 18 + i * 14;
+        cv_rect(x - w / 2, y - h / 2, w, h, i == s->lit ? pic_hue : K_TEXT);
+    }
+}
+#endif
+
+TOY(toy_bitarp, "bitarp", "Bitcrush Arp", "pixels", ROLE_LEAD, HUE_GO, 20, 0, "A crunchy arpeggio so fast it blurs into a chord, with glitchy repeats.", bitarp_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef RATE
 #undef PULSE
 #undef CRUSH

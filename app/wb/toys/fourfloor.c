@@ -67,9 +67,39 @@ static void F(on_step)(toy_t *t)
     }
 }
 
-TOY(toy_fourfloor, "fourfloor", "Four Floor", "four", ROLE_DRUMS, HUE_RED, 0, 1,
-    "A straight dance beat: kick on every beat, open hats between, a clap on two and four.",
-    fourfloor_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: four squares, one a beat, that go red on the kick (with Drive's dark bands) or grey when
+ * it drops out, a ring for the clap, a bar above on the open hat, and the closed hats' ticks below */
+static void F(draw)(toy_t *t)
+{
+    fourfloor_t *s = ST(fourfloor_t);
+    static const uint8_t NEED[16] = {9, 2, 0, 5, 10, 3, 0, 7, 9, 1, 0, 6, 10, 4, 0, 8};
+    int b, i, S_ = 40, Y = 36;
+    for (b = 0; b < 4; b++) {
+        int x = 24 + b * 52, sq = s->sq[b], k, n = P(DRIVE) / 2;
+        cv_rect(x, Y, S_, S_, sq == 1 ? pic_hue : sq == 2 ? K_SAND : K_TEXT);
+        if (sq == 1)
+            for (k = 0; k < n; k++)
+                cv_rect(x, Y + (2 * k + 1) * S_ / (2 * n) - 1, S_, 2, K_BG);
+        if (b == s->ring) {
+            cv_rect(x - 3, Y - 3, S_ + 6, 2, K_TEXT); cv_rect(x - 3, Y + S_ + 1, S_ + 6, 2, K_TEXT);
+            cv_rect(x - 3, Y - 3, 2, S_ + 6, K_TEXT); cv_rect(x + S_ + 1, Y - 3, 2, S_ + 6, K_TEXT);
+        }
+        cv_rect(x, Y - 12, S_, 4, b == s->bar_on ? pic_hue : K_SAND);
+    }
+    for (i = 0; i < BAR; i++) {
+        int x = 24 + (i / 4) * 52 + (i % 4) * 12 + 2, on = P(HATS) >= NEED[i];
+        if (i % 4 == 2)
+            continue;
+        if (i == s->tick)
+            cv_rect(x, Y + S_ + 10, 5, 9, K_TEXT);
+        else
+            cv_rect(x, Y + S_ + 10, 5, on ? 9 : 3, on ? K_SOFT : K_SAND);
+    }
+}
+#endif
+
+TOY(toy_fourfloor, "fourfloor", "Four Floor", "four", ROLE_DRUMS, HUE_RED, 0, 1, "A straight dance beat: kick on every beat, open hats between, a clap on two and four.", fourfloor_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef DRIVE
 #undef HATS
 #undef CLAP

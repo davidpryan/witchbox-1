@@ -36,3 +36,12 @@ static inline int iabs(int a) { return a < 0 ? -a : a; }
                              (uint16_t)sizeof(st)}
 
 enum { HUE_PURPLE, HUE_BLUE, HUE_CYAN, HUE_GO, HUE_YELLOW, HUE_ORANGE, HUE_RED, HUE_PINK, HUE_GREY, NHUES };
+
+/* the pictures: only where there is a screen to draw on (app.c defines WB_PICTURES; the conformance harness
+ * ref/run_c.c does not, and a toy's draw is then left out: PIC(fn) is the class's draw entry) */
+#ifdef WB_PICTURES
+#include "pic.h"
+#define PIC(fn) fn
+#else
+#define PIC(fn) 0
+#endif

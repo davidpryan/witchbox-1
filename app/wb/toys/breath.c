@@ -88,9 +88,28 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_breath, "breath", "Breath Stack", "ribbons", ROLE_VOICE, HUE_CYAN, 40, 1,
-    "Breathy voices that come in one after another above the chord, hold, and leave.",
-    breath_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: four ribbons, one a voice, dashed (shorter dashes for more Air), each brightening as its
+ * voice comes in and rippling while it sings; a voice not in use is a thin line */
+static void F(draw)(toy_t *t)
+{
+    breath_t *s = ST(breath_t);
+    static const int8_t WAVE[8] = {0, 2, 3, 2, 0, -2, -3, -2};
+    int v, i, x0 = 21, seg = 25, w = seg - 1 - P(AIR) * 2;
+    for (v = 0; v < 4; v++) {
+        int y = 18 + v * 32, lvl = s->lvl[v];
+        uint16_t c = lvl == 3 ? pic_hue : lvl == 2 ? K_TEXT : lvl == 1 ? K_SOFT : K_SAND;
+        if (v >= P(VOICES)) {
+            cv_rect(x0, y + 4, seg * 8, 2, K_SAND);
+            continue;
+        }
+        for (i = 0; i < 8; i++)
+            cv_rect(x0 + i * seg, y + (lvl ? WAVE[(i + s->phase + v * 3) % 8] : 0), w, 9, c);
+    }
+}
+#endif
+
+TOY(toy_breath, "breath", "Breath Stack", "ribbons", ROLE_VOICE, HUE_CYAN, 40, 1, "Breathy voices that come in one after another above the chord, hold, and leave.", breath_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef VOICES
 #undef STAGGER
 #undef AIR

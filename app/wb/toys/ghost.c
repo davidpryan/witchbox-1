@@ -91,9 +91,20 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_ghost, "ghost", "Ghost Voice", "mouth", ROLE_VOICE, HUE_PINK, 40, 1,
-    "Short sung phrases that come and go at odd moments, drifting a step or two.",
-    ghost_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a mouth, shut between phrases, that opens wide for a phrase (wider for a longer one),
+ * in colour, and drifts up and down with the notes it sings */
+static void F(draw)(toy_t *t)
+{
+    ghost_t *s = ST(ghost_t);
+    int h = s->h * 3 / 4, y = (s->y - 26) * 3 / 4 - h / 2, w = 63, r = imin(7, h / 2);
+    pic_rrect(120 - w / 2, y, w, h, r, s->open ? pic_hue : K_TEXT);
+    if (h >= 18)
+        pic_rrect(120 - w / 2 + 9, y + 6, w - 18, h - 12, imin(4, (h - 12) / 2), K_BG);
+}
+#endif
+
+TOY(toy_ghost, "ghost", "Ghost Voice", "mouth", ROLE_VOICE, HUE_PINK, 40, 1, "Short sung phrases that come and go at odd moments, drifting a step or two.", ghost_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef PITCH
 #undef PHRASE
 #undef GLIDE

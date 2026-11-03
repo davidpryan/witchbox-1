@@ -59,9 +59,26 @@ static void F(on_step)(toy_t *t)
         toy_note(t, toy_root(t, 0) + 7 + v, 0, 0);
 }
 
-TOY(toy_loom, "loom", "Loom", "loom", ROLE_LEAD, HUE_ORANGE, 0, 3,
-    "A loop of notes on a shift register. Locked it repeats for ever; with Change, a note is rewoven each time round.",
-    loom_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the loop as a row of threads, one a step, each at its note's height, rests as gaps;
+ * the thread being read lit, and the ones just rewoven in the colour too */
+static void F(draw)(toy_t *t)
+{
+    loom_t *s = ST(loom_t);
+    static const uint8_t LEN[3] = {8, 16, 32};
+    int len = LEN[P(LENGTH)], i, w = 224 / len;
+    for (i = 0; i < len; i++) {
+        int v = s->reg[i], x = 8 + i * w;
+        if (v == 99)
+            cv_rect(x, 120, w - 1, 2, K_SAND);
+        else
+            cv_rect(x, 120 - v * 7, w - 1, v * 7 + 2, i == (s->at + len - 1) % len && t->playing ? pic_hue : K_TEXT);
+    }
+    cv_rect(8 + ((s->at + len - 1) % len) * w, 6, w - 1, 3, pic_hue);
+}
+#endif
+
+TOY(toy_loom, "loom", "Loom", "loom", ROLE_LEAD, HUE_ORANGE, 0, 3, "A loop of notes on a shift register. Locked it repeats for ever; with Change, a note is rewoven each time round.", loom_t, F(make), 0, 0, F(randomise), F(on_step), 0, 0, PIC(F(draw)), 0);
 #undef CHANGE
 #undef LENGTH
 #undef RANGE

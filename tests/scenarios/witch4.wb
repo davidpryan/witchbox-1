@@ -1,14 +1,14 @@
 # The Witch IV shelf: every one of its twenty toys plays, bands of them with the conductors sound
 # sane, and the shelf's fourth page lists them.
 wait 100
-seat 1 turing 1234
-seat 2 sleepwalk 77
-seat 3 seance 5
-seat 4 fractal 9
-seat 5 chimes 3
-seat 6 static 8
-seat 7 culling 1
-seat 8 moon 2
+seat 0 turing 1234
+seat 1 sleepwalk 77
+seat 2 seance 5
+seat 3 fractal 9
+seat 4 chimes 3
+seat 5 static 8
+seat 6 culling 1
+seat 7 moon 2
 expect seated 8
 wav witch4.wav
 tap PLAY
@@ -20,23 +20,23 @@ expect peak_db_max 0
 wavstop
 tap PLAY
 wait 100
-seat 1 ratchet 11
-seat 2 pulsar 12
-seat 3 lichen 13
-seat 4 oracle 14
-seat 5 whisper 15
-seat 6 markovkit 16
-seat 7 automaton 17
-seat 8 hysteria 18
+seat 0 ratchet 11
+seat 1 pulsar 12
+seat 2 lichen 13
+seat 3 oracle 14
+seat 4 whisper 15
+seat 5 markovkit 16
+seat 6 automaton 17
+seat 7 hysteria 18
 tap PLAY
 wait 8000
 expect notes >200
 tap PLAY
 wait 100
-seat 1 round 21
-seat 2 loom 22
-seat 3 golden 23
-seat 4 haunting 24
+seat 0 round 21
+seat 1 loom 22
+seat 2 golden 23
+seat 3 haunting 24
 tap PLAY
 wait 8000
 expect notes >300

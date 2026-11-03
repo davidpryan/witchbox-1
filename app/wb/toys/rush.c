@@ -95,9 +95,27 @@ static void F(frame)(toy_t *t, int ms)
     s->tt += ms;
 }
 
-TOY(toy_rush, "rush", "Snare Rush", "rush", ROLE_DRUMS, HUE_ORANGE, 20, 1,
-    "Snare rolls that speed up into the end of the bar and land on a crash.",
-    rush_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the roll's hits as a row of bars, closer together as it speeds up, each lit as it
+ * sounds; two squares for the backbeat; a strip that flashes on the downbeat */
+static void F(draw)(toy_t *t)
+{
+    rush_t *s = ST(rush_t);
+    const uint16_t *hits = RU_PLAN[P(SPAN) - 1][P(ACCEL)];
+    int k, n;
+    cv_rect(0, 8, 240, 4, s->strip > 0 ? pic_hue : K_BG);
+    cv_rect(0, 132, 240, 4, s->strip > 0 ? pic_hue : K_BG);
+    for (k = 0; k < 72 && hits[k] != 65535; k++) {
+        int x = 12 + hits[k] * 216 / (P(SPAN) * 4000);
+        cv_rect(x, 40, 2, 60, k == s->hot ? pic_hue : K_TEXT);
+    }
+    for (n = 0; n < 2; n++)
+        if (P(BACK))
+            cv_rect(60 + n * 108, 110, 9, 9, n == s->beat ? pic_hue : K_SAND);
+}
+#endif
+
+TOY(toy_rush, "rush", "Snare Rush", "rush", ROLE_DRUMS, HUE_ORANGE, 20, 1, "Snare rolls that speed up into the end of the bar and land on a crash.", rush_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef EVERY
 #undef SPAN
 #undef ACCEL

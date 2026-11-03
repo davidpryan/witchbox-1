@@ -5,7 +5,8 @@
 #undef F
 #define F(n) hy_##n
 
-typedef struct { int x; } hysteria_t;           /* 0..4095 */
+#define HY_HIST 24
+typedef struct { int x; uint16_t xs[HY_HIST]; int hp; } hysteria_t;   /* x 0..4095; xs: the picture's history */
 #define CHAOS 0
 #define RANGE 1
 #define RATE 2
@@ -48,6 +49,8 @@ static void F(on_step)(toy_t *t)
         s->x = 1;
     if (s->x > 4095)
         s->x = 4095;
+    s->xs[s->hp] = (uint16_t)s->x;
+    s->hp = (s->hp + 1) % HY_HIST;
     if (s->x < 820 && dice_lt(P(SKIPS), 11))
         return;
     root = toy_root(t, 0) - 7;
@@ -58,9 +61,24 @@ static void F(on_step)(toy_t *t)
     toy_note(t, tones[k], 0, 0);
 }
 
-TOY(toy_hysteria, "hysteria", "Hysteria", "chaos", ROLE_BASS, HUE_RED, 0, 3,
-    "The logistic map picks every note: one steady note, then two, then four, then chaos.",
-    hysteria_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: the map's recent values as dots across the screen, so a steady note is one line,
+ * a flip is two, four lines four, and chaos a scatter; the knob's place on the way to chaos below */
+static void F(draw)(toy_t *t)
+{
+    hysteria_t *s = ST(hysteria_t);
+    int i;
+    for (i = 0; i < HY_HIST; i++) {
+        int v = s->xs[(s->hp + i) % HY_HIST], x = 12 + i * 216 / HY_HIST, y = 118 - v * 100 / 4096;
+        pic_disc(x, y, i == HY_HIST - 1 ? 4 : 2, i == HY_HIST - 1 ? pic_hue : K_TEXT);
+    }
+    cv_rect(12, 130, 216, 2, K_PANEL);
+    cv_rect(12, 128, P(CHAOS) * 216 / 10, 6, pic_hue);
+    cv_text(12, 4, &FONT_XS, "X", K_DIM);
+}
+#endif
+
+TOY(toy_hysteria, "hysteria", "Hysteria", "chaos", ROLE_BASS, HUE_RED, 0, 3, "The logistic map picks every note: one steady note, then two, then four, then chaos.", hysteria_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef CHAOS
 #undef RANGE
 #undef RATE

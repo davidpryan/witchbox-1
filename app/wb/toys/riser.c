@@ -103,9 +103,34 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_riser, "riser", "Riser", "ramp", ROLE_TEXTURE, HUE_ORANGE, 40, 1,
-    "Build-up and release: a sweep rises into the end of each phrase and an impact lands.",
-    riser_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: a ramp of slats that fills from the left as the riser climbs, the last of them in
+ * colour; at the impact a square frame bursts out round it and fades */
+static void F(draw)(toy_t *t)
+{
+    riser_t *s = ST(riser_t);
+    static const uint8_t GROW[4] = {4, 9, 14, 18};
+    int k, x0 = 30, base = 126;
+    for (k = 0; k < 60; k++) {
+        int h = 3 + 87 * (k + 1) / 60;
+        uint16_t c = k < s->full ? (k >= 45 ? pic_hue : K_TEXT) : K_SAND;
+        cv_rect(x0 + 3 * k, base - h, 2, h, c);
+    }
+    if (s->burst) {
+        int kk = s->burst / (60 + P(IMPACT) * 8), m, x, y, w, h;
+        uint16_t c;
+        if (kk < 4) {
+            m = GROW[kk];
+            c = kk == 0 ? pic_hue : kk == 1 ? K_TEXT : kk == 2 ? K_SOFT : K_SAND;
+            x = x0 - m; y = base - 90 - m; w = 180 + 2 * m; h = 90 + 2 * m;
+            cv_rect(x, y, w, 2, c); cv_rect(x, y + h - 2, w, 2, c);
+            cv_rect(x, y, 2, h, c); cv_rect(x + w - 2, y, 2, h, c);
+        }
+    }
+}
+#endif
+
+TOY(toy_riser, "riser", "Riser", "ramp", ROLE_TEXTURE, HUE_ORANGE, 40, 1, "Build-up and release: a sweep rises into the end of each phrase and an impact lands.", riser_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef EVERY
 #undef SPAN
 #undef KIND

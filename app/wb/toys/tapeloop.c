@@ -82,9 +82,39 @@ static void F(play_changed)(toy_t *t)
         ST(tapeloop_t)->lit = -1;
 }
 
-TOY(toy_tapeloop, "tapeloop", "Tape Loop", "reels", ROLE_CHORDS, HUE_CYAN, 0, 1,
-    "A short loop of chords on worn tape that drifts against the bar.",
-    tapeloop_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, 0, 0);
+#ifdef WB_PICTURES
+/* the picture: two reels, their holes turning, a tape between them with a block for each beat that
+ * plays; the tape goes fainter and more crooked as the loop wears; the pass count written under */
+static void F(draw)(toy_t *t)
+{
+    tapeloop_t *s = ST(tapeloop_t);
+    static const uint8_t BEATS[4] = {3, 5, 6, 7};
+    static const int8_t SPOKE[8][2] = {{0, -10}, {7, -7}, {10, 0}, {7, 7}, {0, 10}, {-7, 7}, {-10, 0}, {-7, -7}};
+    int level = imin(2, s->age * P(WEAR) / 10), wave = level * P(WOBBLE) * 3 / 10, i, b, n = BEATS[P(LOOP)];
+    uint16_t ink = level == 0 ? K_TEXT : level == 1 ? K_SOFT : K_SAND;
+    int rx[2] = {44, 202}, ry = 44, turn = t->playing ? (int)(plat_ms() / 90u) & 7 : 0;
+    char buf[20];
+    for (i = 0; i < 2; i++) {
+        pic_disc(rx[i], ry, 20, K_TEXT);
+        pic_disc(rx[i], ry, 4, K_BG);
+        cv_rect(rx[i] + SPOKE[turn][0] - 2, ry + SPOKE[turn][1] - 2, 5, 5, K_BG);
+        cv_rect(rx[i] - SPOKE[turn][0] - 2, ry - SPOKE[turn][1] - 2, 5, 5, K_BG);
+        cv_rect(rx[i] + (i ? 0 : -1), ry + 20, 2, 106 - ry - 20, K_SOFT);
+    }
+    for (i = 0; i < 21; i++)
+        cv_rect(45 + i * 7, 106 + (i % 2 ? wave : -wave), 7, 2, ink);
+    for (b = 0; b < 7; b++)
+        if (s->hits[b] != TL_NONE && b < n)
+            cv_rect(45 + b * 150 / n, 100, 5, 14, b == s->lit ? pic_hue : ink);
+    if (s->lit >= 0)
+        cv_rect(45 + s->lit * 150 / n, 90, 5, 8, pic_hue);
+    itoa_s(s->age % P(RENEW) + 1, buf);
+    cv_text(96, 124, &FONT_XS, "PASS", K_SOFT);
+    cv_text(124, 124, &FONT_XS, buf, K_SOFT);
+}
+#endif
+
+TOY(toy_tapeloop, "tapeloop", "Tape Loop", "reels", ROLE_CHORDS, HUE_CYAN, 0, 1, "A short loop of chords on worn tape that drifts against the bar.", tapeloop_t, F(make), 0, F(changed), F(randomise), F(on_step), F(play_changed), 0, PIC(F(draw)), 0);
 #undef LOOP
 #undef WEAR
 #undef WOBBLE

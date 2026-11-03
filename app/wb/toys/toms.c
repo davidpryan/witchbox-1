@@ -82,9 +82,28 @@ static void F(frame)(toy_t *t, int ms)
             s->ms[k] = imax(0, s->ms[k] - ms);
 }
 
-TOY(toy_toms, "toms", "Fog Toms", "toms", ROLE_DRUMS, HUE_PURPLE, 40, 1,
-    "Slow, booming toms tuned to the chord, in a sparse pattern that wanders.",
-    toms_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: three toms, the root's the biggest, each swelling and going purple when struck, with a
+ * ring of fog that rises off it and fades as the tail dies */
+static void F(draw)(toy_t *t)
+{
+    toms_t *s = ST(toms_t);
+    static const uint8_t X[3] = {187, 120, 52}, R[3] = {15, 13, 11};
+    int k, tail = F(tail_ms)(t);
+    for (k = 0; k < 3; k++) {
+        int left = s->ms[k], r = R[k] + (left ? 3 * left / tail + 1 : 0);
+        if (left) {
+            int y = 4 + (86 - 4) * left / tail, x = X[k] - R[k], w = 2 * R[k];
+            uint16_t c = left * 2 > tail ? K_SOFT : K_SAND;
+            cv_rect(x + 2, y, w - 4, 2, c); cv_rect(x + 2, y + 5, w - 4, 2, c);
+            cv_rect(x, y + 2, 2, 3, c); cv_rect(x + w - 2, y + 2, 2, 3, c);
+        }
+        pic_disc(X[k], 110, r, left ? pic_hue : K_TEXT);
+    }
+}
+#endif
+
+TOY(toy_toms, "toms", "Fog Toms", "toms", ROLE_DRUMS, HUE_PURPLE, 40, 1, "Slow, booming toms tuned to the chord, in a sparse pattern that wanders.", toms_t, F(make), 0, F(changed), F(randomise), F(on_step), 0, F(frame), PIC(F(draw)), 0);
 #undef HITS
 #undef TAIL
 #undef DEPTH

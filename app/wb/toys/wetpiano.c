@@ -91,9 +91,31 @@ static void F(frame)(toy_t *t, int ms)
     }
 }
 
-TOY(toy_wetpiano, "wetpiano", "Wet Piano", "pkeys", ROLE_CHORDS, HUE_BLUE, 25, 0,
-    "Sparse, dull piano chords, strummed a little late like a worn tape.",
-    wetpiano_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), 0, 0);
+#ifdef WB_PICTURES
+/* the picture: fifteen keys; drops fall on them, swaying with Wow, and a key struck goes dark for a
+ * moment, darker the duller the tone */
+static void F(draw)(toy_t *t)
+{
+    wetpiano_t *s = ST(wetpiano_t);
+    static const int8_t SWAY[8] = {0, 1, 2, 1, 0, -1, -2, -1};
+    int k, beat = 4 * t->step_ms;
+    for (k = 0; k < WP_KEYS; k++) {
+        uint16_t c = K_TEXT;
+        if (s->ring[k])
+            c = P(DULL) > 7 ? K_SAND : pic_hue;
+        cv_rect(8 + k * 15, 112, 14, 26, c);
+    }
+    for (k = 0; k < s->n; k++) {
+        int key = s->key[k], y = 108 - s->ms[k] * 82 / beat, x;
+        if (y < 4 || s->ms[k] <= 0)
+            continue;
+        x = 8 + key * 15 + 7 + P(WOW) * SWAY[(y >> 3) & 7] / 4;
+        pic_disc(x, y, 2, pic_hue);
+    }
+}
+#endif
+
+TOY(toy_wetpiano, "wetpiano", "Wet Piano", "pkeys", ROLE_CHORDS, HUE_BLUE, 25, 0, "Sparse, dull piano chords, strummed a little late like a worn tape.", wetpiano_t, F(make), 0, 0, F(randomise), F(on_step), F(play_changed), F(frame), PIC(F(draw)), 0);
 #undef STRUM
 #undef SPARSE
 #undef WOW
