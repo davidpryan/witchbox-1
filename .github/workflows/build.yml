@@ -30,7 +30,7 @@ jobs:
           https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git "$HOME/fw-AC79_AIoT_SDK"
       - name: Build the firmware (a development build, for the update-path tests)
         run: ./build.sh
-      - name: Tests again, with the package (the quick sweep: the full one ran above)
+      - name: Tests again, with the package (the quick sweep; the full one ran above)
         run: QUICK=1 AC79_SDK="$HOME/fw-AC79_AIoT_SDK" tests/run_tests.sh
       - name: Build the release
         run: ./build.sh --release 0.3
