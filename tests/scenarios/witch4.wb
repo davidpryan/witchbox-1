@@ -53,4 +53,6 @@ expect browse 1
 shot shelf4.png
 tapkey w0
 wait 50
+tapkey w0
+wait 50
 expect toy 60

@@ -57,7 +57,7 @@ screen says which.
 | PLAY | the band plays / stops. Play always starts every toy from the top of its seed | |
 | REC | Random: a new seed for this toy, and the knobs that go with it | a random band of eight (drums, bass, chords, lead, voice, texture, a second lead and chords), fresh seeds; on the Tape or Clock page, a random arrangement instead |
 | OCT− / OCT+ | the seat on screen (1 to 8); on the shelf, its page | |
-| HOME | the shelf: twenty toys on the keys, OCT−/OCT+ for the other pages (Witch I to IV) | knobs: lights, volume |
+| HOME | the shelf: twenty toys on the keys (a key picks one out, the same key again opens it), OCT−/OCT+ for the other pages (Witch I to IV) | knobs: lights, volume |
 | SEL | the next dark scale (Playbox's SCALE button) | |
 | ARP | mute this seat | |
 | SEQ | the arrangement: Band (everyone plays), Tape, Clock, round again; the page follows | |
@@ -97,7 +97,11 @@ chord "that is coming" included, so Swell, Wet Piano, Riser and Tape Loop lean o
 On the Tape page the sixteen white keys are the sixteen bars in view of this seat's lane: a key
 toggles a bar.
 
-With HOME's shelf open, white keys 1–16 and black keys 1–4 are the twenty toys of that page.
+With HOME's shelf open, white keys 1–16 and black keys 1–4 are the twenty toys of that page, in
+the order the screen numbers them. A key picks its toy out: the name is boxed on the shelf and shown
+below it, and that key lights; the same key again opens the toy into the seat. Only keys 5, 10, 15
+and 20 are lit otherwise, as landmarks (their numbers are brighter on the screen too), so a key is
+easy to count to.
 On the Saves page, white keys load a saved toy into this seat and black keys 1–4 load a saved band.
 With SAVE held, the same keys save. With GLO held, white keys 1–16 pick Random and the fifteen
 progressions, black keys 1–9 the scale. With EDIT held, white keys type the seed.

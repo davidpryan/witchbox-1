@@ -11,6 +11,8 @@ shot band.png
 tap SEQ
 tap HOME
 wait 50
+tapkey w6
+wait 50
 shot shelf.png
 tap HOME
 press GLO

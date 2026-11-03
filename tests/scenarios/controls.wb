@@ -58,19 +58,36 @@ wait 50
 tap SEL
 wait 50
 expect scale 7
-# HOME opens the shelf; a key picks a toy; the shelf closes
+# HOME opens the shelf; a key picks a toy out (the shelf stays, the pick shown); the same key again opens it
 tap HOME
 wait 50
 expect browse 1
+tapkey w9
+wait 50
+expect browse 1
+expect pick 9
+expect toy 0
 shot shelf.png
 tapkey w9
 wait 50
 expect browse 0
 expect toy 9
+# another key after a pick picks that one instead; a page turn drops the pick
 tap HOME
 wait 50
+tapkey w2
+wait 50
+expect pick 2
+tapkey w3
+wait 50
+expect pick 3
+expect browse 1
 tap OCT+
 wait 50
+expect pick -1
+tapkey b1
+wait 50
+expect pick 17
 tapkey b1
 wait 50
 expect toy 37

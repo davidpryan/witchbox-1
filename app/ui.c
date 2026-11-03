@@ -11,7 +11,7 @@
  *   PLAY          play / stop the band               SEL       the next dark scale
  *   OCT- / OCT+   the seat on screen (1-8)           REC       Random (new seed); held: a random band,
  *                                                             or on the Tape / Clock page a random arrangement
- *   HOME          the shelf: keys pick a toy, OCT± the page (Witch I, II, III)   ARP  mute this seat
+ *   HOME          the shelf: a key picks a toy out, the same key again opens it; OCT± the page   ARP  mute this seat
  *   SEQ           the arrangement: Band, Tape, Clock (and its page)
  *   SAVE          held: a white key saves the toy there, a black key the band;
  *                 on the Saves page the keys load them       GLO tapped: help
@@ -48,6 +48,7 @@ static const uint16_t HUE_C[NHUES] = {RGB(140, 92, 230), RGB(66, 134, 244), RGB(
 
 static struct {
     int page, hold, dirty, help, browse, bpage, hint;
+    int pick;                                   /* the shelf: the toy a key picked out (0..19), -1 none; the same key again opens it */
     uint32_t btn_was, keys_was, btn_at[NB], keys_at;
     char say_a[24], say_b[24];
     uint32_t say_until, autosave, accel_at[NE], last_frame;
@@ -294,17 +295,29 @@ static void toy_pick(int id)       /* this toy into the seat on screen, with the
     changed();
 }
 
-static void shelf_key(int key)     /* the shelf: twenty toys a page on the keys */
+static int shelf_toy(int n)        /* the n-th toy (0..19) of the shelf's page, or -1 */
 {
-    int w = key_white[key], b = key_black[key], n = w >= 0 ? w : b >= 0 && b < 4 ? 16 + b : -1, i, c = 0;
-    if (n < 0)
-        return;
+    int i, c = 0;
     for (i = 0; i < NTOYS; i++)
-        if (TOYS[i]->page == ui.bpage && c++ == n) {
-            toy_pick(i);
-            ui.browse = 0;
-            return;
-        }
+        if (TOYS[i]->page == ui.bpage && c++ == n)
+            return i;
+    return -1;
+}
+
+static void shelf_key(int key)     /* the shelf: twenty toys a page on the keys. One press picks a toy out
+                                    * (named on the screen, its key lit); the same key again opens it */
+{
+    int w = key_white[key], b = key_black[key], n = w >= 0 ? w : b >= 0 && b < 4 ? 16 + b : -1, id;
+    if (n < 0 || (id = shelf_toy(n)) < 0)
+        return;
+    if (ui.pick == n) {
+        toy_pick(id);
+        ui.browse = 0;
+        ui.pick = -1;
+        return;
+    }
+    ui.pick = n;
+    say(TOYS[id]->name, "AGAIN TO OPEN");
 }
 
 static void speed_set(int pct)
@@ -402,9 +415,9 @@ static void button_tap(int b)      /* pressed and released without a layer being
 {
     switch (b) {
     case B_PLAY: band_play(!band_playing); if (!band_playing) changed(); break;
-    case B_HOME: ui.browse = !ui.browse; ui.help = 0; break;
-    case B_OCTDN: if (ui.browse) ui.bpage = (ui.bpage + NSHELF - 1) % NSHELF; else seat_set(proj.cur - 1); break;
-    case B_OCTUP: if (ui.browse) ui.bpage = (ui.bpage + 1) % NSHELF; else seat_set(proj.cur + 1); break;
+    case B_HOME: ui.browse = !ui.browse; ui.help = 0; ui.pick = -1; break;
+    case B_OCTDN: if (ui.browse) { ui.bpage = (ui.bpage + NSHELF - 1) % NSHELF; ui.pick = -1; } else seat_set(proj.cur - 1); break;
+    case B_OCTUP: if (ui.browse) { ui.bpage = (ui.bpage + 1) % NSHELF; ui.pick = -1; } else seat_set(proj.cur + 1); break;
     case B_REC: band_shake(proj.cur); say("NEW SEED", 0); changed(); break;
     case B_SEQ:                 /* the arrangement: Band, Tape, Clock; and its page */
         proj.now.mode = (uint8_t)((proj.now.mode + 1) % NMODES);
@@ -487,6 +500,7 @@ static void input(void)
         } else {
             ui.page = ((ui.page + e) % NPAGES + NPAGES) % NPAGES;
             ui.browse = ui.help = 0;
+            ui.pick = -1;
         }
         ui.dirty = 1;
     }
@@ -821,10 +835,17 @@ static void draw_shelf(void)       /* the toy box: twenty toys of this page, one
             continue;
         x = (n % 3) * 80;
         y = (n / 3) * 18;
-        if (cur() && cur()->id == i)
+        if (n == ui.pick) {                     /* picked out: boxed, the name's key is lit */
             cv_rect(x, y, 79, 17, K_PANEL);
+            cv_rect(x, y, 79, 1, K_ACC);
+            cv_rect(x, y + 16, 79, 1, K_ACC);
+            cv_rect(x, y, 1, 17, K_ACC);
+            cv_rect(x + 78, y, 1, 17, K_ACC);
+        } else if (cur() && cur()->id == i) {
+            cv_rect(x, y, 79, 17, K_PANEL);
+        }
         itoa_s(n + 1, b);
-        cv_text(x + 2, y + 1, &FONT_XS, b, K_DIM);
+        cv_text(x + 2, y + 1, &FONT_XS, b, n == ui.pick ? K_TEXT : (n + 1) % 5 == 0 ? K_TEXT : K_DIM);
         caps(b, TOYS[i]->name, 16);
         if (b[11]) {                            /* too wide for the column: the first word(s) that fit */
             int c = 11;
@@ -837,7 +858,13 @@ static void draw_shelf(void)       /* the toy box: twenty toys of this page, one
     }
     caps(b, SHELF_NAME[ui.bpage], 14);
     cv_text(4, 128, &FONT_XS, b, K_TEXT);
-    cv_text(96, 128, &FONT_XS, "KEYS 1-20 PICK. OCT-/+ PAGE", K_DIM);
+    if (ui.pick >= 0 && shelf_toy(ui.pick) >= 0) {
+        caps(b, TOYS[shelf_toy(ui.pick)]->name, 18);
+        cv_text(96, 128, &FONT_XS, b, HUE_C[TOYS[shelf_toy(ui.pick)]->hue]);
+        cv_text(96 + text_w(&FONT_XS, b) + 6, 128, &FONT_XS, "KEY AGAIN OPENS", K_DIM);
+    } else {
+        cv_text(96, 128, &FONT_XS, "A KEY PICKS. OCT-/+ PAGE", K_DIM);
+    }
     cv_blit(0, 24);
 }
 
@@ -923,13 +950,13 @@ static void leds(void)
         b |= 1u << B_SEQ;
     if (proj.now.seat[proj.cur].mute)
         b |= 1u << B_ARP;
-    if (ui.browse) {
-        int n = 0;
-        for (i = 0; i < (uint32_t)NTOYS; i++)
-            if (TOYS[i]->page == ui.bpage) {
+    if (ui.browse) {                            /* landmarks: keys 5, 10, 15 and 20; and the toy picked out */
+        int n;
+        for (n = 4; n < 20; n += 5)
+            if (shelf_toy(n) >= 0)
                 k |= 1u << (n < 16 ? WHITE[n] : BLACK[n - 16]);
-                n++;
-            }
+        if (ui.pick >= 0)
+            k |= 1u << (ui.pick < 16 ? WHITE[ui.pick] : BLACK[ui.pick - 16]);
     } else {
         if (ui.page == PG_TAPE) {
             int bar;
@@ -983,6 +1010,7 @@ void ui_init(void)
     ui.hold = L_NONE;
     ui.root_hold = -1;
     ui.solo = -1;
+    ui.pick = -1;
     ui.speed_toggle = 100;
     ui.btn_was = plat_buttons();
     ui.keys_was = plat_keys();

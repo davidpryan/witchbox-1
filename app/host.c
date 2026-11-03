@@ -3,7 +3,7 @@
  * witchbox1's checks for "expect", its commands and a reboot.
  *
  * Checks: playing page seat toy seed knobN scale chords tempo speed steps notes mute seated leds dirty slotN
- * browse hold (fm1-base's own: store_writes midi_out peak_db_max peak_db_min cpu). Commands: seat N TOY SEED (a toy
+ * browse hold pick (fm1-base's own: store_writes midi_out peak_db_max peak_db_min cpu). Commands: seat N TOY SEED (a toy
  * into seat N, by its module name, with that seed), foreign (another firmware's project left in the flash object). */
 
 int app_expect(const char *what, int *got)
@@ -50,6 +50,8 @@ int app_expect(const char *what, int *got)
         g = ui.browse;
     else if (!strcmp(what, "hold"))
         g = ui.hold;
+    else if (!strcmp(what, "pick"))
+        g = ui.pick;
     else
         return 0;
     *got = g;
